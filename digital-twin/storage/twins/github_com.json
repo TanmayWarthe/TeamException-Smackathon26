@@ -1,0 +1,280 @@
+{
+  "website_name": "GitHub Login (Test Twin)",
+  "official_url": "https://github.com/login",
+  "domain": "github.com",
+  "screenshot_path": "/home/tanmaaay/DEV/HACKATHONS/SMACKATHON26/Campus-Threat-Intelligence/digital-twin/storage/screenshots/github_com.png",
+  "logo_path": null,
+  "visual_embedding": null,
+  "logo_embedding": null,
+  "dom_fingerprint": {
+    "element_count": 308,
+    "tag_frequency": {
+      "link": 86,
+      "meta": 60,
+      "div": 40,
+      "input": 16,
+      "path": 14,
+      "script": 12,
+      "svg": 12,
+      "a": 11,
+      "button": 8,
+      "span": 7,
+      "li": 6,
+      "template": 4,
+      "p": 4,
+      "html": 2,
+      "react-partial": 2,
+      "label": 2,
+      "cookie-consent-link": 2,
+      "clipboard-copy": 2,
+      "head": 1,
+      "style": 1,
+      "title": 1,
+      "body": 1,
+      "tool-tip": 1,
+      "main": 1,
+      "h1": 1,
+      "form": 1,
+      "webauthn-status": 1,
+      "include-fragment": 1,
+      "h3": 1,
+      "webauthn-subtle": 1,
+      "ul": 1,
+      "ghcc-consent": 1,
+      "details": 1,
+      "summary": 1,
+      "details-dialog": 1,
+      "microsoft-analytics": 1
+    },
+    "dom_depth": 15,
+    "form_count": 1,
+    "input_count": 16,
+    "has_nav": false,
+    "has_header": false,
+    "has_footer": false,
+    "link_count": 11,
+    "script_count": 12,
+    "meta_tags": [
+      {
+        "name": "route-pattern",
+        "content": "/login(.:format)"
+      },
+      {
+        "name": "route-controller",
+        "content": "sessions"
+      },
+      {
+        "name": "route-action",
+        "content": "new"
+      },
+      {
+        "name": "fetch-nonce",
+        "content": "v2:566de211-803e-7c8e-7e5a-fefdb1b1177a"
+      },
+      {
+        "name": "current-catalog-service-hash",
+        "content": "701273d4944fb23919c770da2da3f33b6da9ed8e668f7249090e3e9f429343b5"
+      },
+      {
+        "name": "request-id",
+        "content": "DE1E:2A4CB0:19FFAA4:1FCCFCC:6A6F2D35"
+      },
+      {
+        "name": "html-safe-nonce",
+        "content": "b5ddc32e3893bf454b4282e853befa91f450c423da128467d027f5b6365568a0"
+      },
+      {
+        "name": "visitor-payload",
+        "content": "eyJyZWZlcnJlciI6IiIsInJlcXVlc3RfaWQiOiJERTFFOjJBNENCMDoxOUZGQUE0OjFGQ0NGQ0M6NkE2RjJEMzUiLCJ2aXNpdG9yX2lkIjoiMzgwMDA5MDkzMTAzMzQ4NDU5NyIsInJlZ2lvbl9lZGdlIjoiY2VudHJhbGluZGlhIiwicmVnaW9uX3JlbmRlciI6ImNl"
+      },
+      {
+        "name": "visitor-hmac",
+        "content": "5d96b97e869c1b75e8c9b775f37be4002c73357ec55588c2269eb3686820efc4"
+      },
+      {
+        "name": "github-keyboard-shortcuts",
+        "content": "copilot"
+      },
+      {
+        "name": "google-site-verification",
+        "content": "Apib7-x98H0j5cPqHWwSMm6dNU4GmODRoqxLiDzdx9I"
+      },
+      {
+        "name": "octolytics-url",
+        "content": "https://collector.github.com/github/collect"
+      },
+      {
+        "name": "analytics-location-query-strip",
+        "content": "true"
+      },
+      {
+        "name": "viewport",
+        "content": "width=device-width"
+      },
+      {
+        "name": "description",
+        "content": "GitHub is where people build software. More than 150 million people use GitHub to discover, fork, and contribute to over 420 million projects."
+      },
+      {
+        "name": "fb:app_id",
+        "content": "1401488693436528"
+      },
+      {
+        "name": "og:url",
+        "content": "https://github.com"
+      },
+      {
+        "name": "og:site_name",
+        "content": "GitHub"
+      },
+      {
+        "name": "og:title",
+        "content": "Build software better, together"
+      },
+      {
+        "name": "og:description",
+        "content": "GitHub is where people build software. More than 150 million people use GitHub to discover, fork, and contribute to over 420 million projects."
+      },
+      {
+        "name": "og:image",
+        "content": "https://github.githubassets.com/assets/github-logo-55c5b9a1fe52.png"
+      },
+      {
+        "name": "og:image:type",
+        "content": "image/png"
+      },
+      {
+        "name": "og:image:width",
+        "content": "1200"
+      },
+      {
+        "name": "og:image:height",
+        "content": "1200"
+      },
+      {
+        "name": "og:image",
+        "content": "https://github.githubassets.com/assets/github-mark-57519b92ca4e.png"
+      },
+      {
+        "name": "og:image:type",
+        "content": "image/png"
+      },
+      {
+        "name": "og:image:width",
+        "content": "1200"
+      },
+      {
+        "name": "og:image:height",
+        "content": "620"
+      },
+      {
+        "name": "og:image",
+        "content": "https://github.githubassets.com/assets/github-octocat-13c86b8b336d.png"
+      },
+      {
+        "name": "og:image:type",
+        "content": "image/png"
+      },
+      {
+        "name": "og:image:width",
+        "content": "1200"
+      },
+      {
+        "name": "og:image:height",
+        "content": "620"
+      },
+      {
+        "name": "twitter:site",
+        "content": "github"
+      },
+      {
+        "name": "twitter:site:id",
+        "content": "13334762"
+      },
+      {
+        "name": "twitter:creator",
+        "content": "github"
+      },
+      {
+        "name": "twitter:creator:id",
+        "content": "13334762"
+      },
+      {
+        "name": "twitter:card",
+        "content": "summary_large_image"
+      },
+      {
+        "name": "twitter:title",
+        "content": "GitHub"
+      },
+      {
+        "name": "twitter:description",
+        "content": "GitHub is where people build software. More than 150 million people use GitHub to discover, fork, and contribute to over 420 million projects."
+      },
+      {
+        "name": "twitter:image",
+        "content": "https://github.githubassets.com/assets/github-logo-55c5b9a1fe52.png"
+      },
+      {
+        "name": "twitter:image:width",
+        "content": "1200"
+      },
+      {
+        "name": "twitter:image:height",
+        "content": "1200"
+      },
+      {
+        "name": "hostname",
+        "content": "github.com"
+      },
+      {
+        "name": "expected-hostname",
+        "content": "github.com"
+      },
+      {
+        "name": "turbo-cache-control",
+        "content": "no-preview"
+      },
+      {
+        "name": "turbo-body-classes",
+        "content": "logged-out env-production page-responsive session-authentication"
+      },
+      {
+        "name": "disable-turbo",
+        "content": "false"
+      },
+      {
+        "name": "browser-stats-url",
+        "content": "https://api.github.com/_private/browser/stats"
+      },
+      {
+        "name": "browser-errors-url",
+        "content": "https://api.github.com/_private/browser/errors"
+      },
+      {
+        "name": "release",
+        "content": "e9c0afb370b411e0ca95623f0c0ef8569274ae2f"
+      },
+      {
+        "name": "ui-target",
+        "content": "full"
+      },
+      {
+        "name": "theme-color",
+        "content": "#1e2327"
+      },
+      {
+        "name": "color-scheme",
+        "content": "light dark"
+      }
+    ]
+  },
+  "css_colors": [
+    "#1e3a8a",
+    "#ffffff",
+    "#0f172a"
+  ],
+  "title": "github.com",
+  "created_at": "2026-08-02T11:42:45.480736+00:00",
+  "fingerprint_version": 1
+}

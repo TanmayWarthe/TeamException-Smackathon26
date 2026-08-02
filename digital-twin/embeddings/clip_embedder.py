@@ -1,0 +1,127 @@
+"""
+digital-twin/embeddings/clip_embedder.py
+CLIP visual embedding singleton — loads the model once and caches it in memory.
+Used for both full-page screenshots and cropped logos.
+
+Uses HuggingFace transformers with openai/clip-vit-base-patch32 (pre-trained,
+no training required — Chapter 8.13 of spec).
+"""
+
+import numpy as np
+from pathlib import Path
+from PIL import Image
+from typing import Optional
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from shared.config import CLIP_MODEL_NAME
+
+# ── Singleton model cache ─────────────────────────────────────
+_model = None
+_processor = None
+
+
+def _load_model():
+    """Load CLIP model and processor once, cache globally."""
+    global _model, _processor
+    if _model is None:
+        from transformers import CLIPModel, CLIPProcessor
+        print(f"[CLIP] Loading model: {CLIP_MODEL_NAME} ...")
+        _processor = CLIPProcessor.from_pretrained(CLIP_MODEL_NAME)
+        _model = CLIPModel.from_pretrained(CLIP_MODEL_NAME)
+        _model.eval()
+        print("[CLIP] Model loaded and cached.")
+    return _model, _processor
+
+
+def get_image_embedding(image_path: str) -> Optional[np.ndarray]:
+    """
+    Generate a 512-dimensional CLIP embedding for an image.
+
+    Args:
+        image_path: Path to a PNG/JPG image file.
+
+    Returns:
+        np.ndarray of shape (512,) with float32 values,
+        or None if the image cannot be loaded.
+    """
+    if not Path(image_path).exists():
+        print(f"[CLIP] Image not found: {image_path}")
+        return None
+
+    try:
+        image = Image.open(image_path).convert("RGB")
+    except Exception as e:
+        print(f"[CLIP] Failed to open image {image_path}: {e}")
+        return None
+
+    model, processor = _load_model()
+
+    import torch
+    with torch.no_grad():
+        inputs = processor(images=image, return_tensors="pt")
+        outputs = model.get_image_features(**inputs)
+        # Normalize the embedding
+        embedding = outputs[0].numpy()
+        embedding = embedding / np.linalg.norm(embedding)
+
+    return embedding.astype(np.float32)
+
+
+def get_text_embedding(text: str) -> np.ndarray:
+    """
+    Generate a CLIP text embedding (for future text-based similarity).
+    Not used in MVP but included for completeness.
+
+    TODO: Use this for comparing page titles / meta descriptions
+    against official institutional text.
+    """
+    model, processor = _load_model()
+
+    import torch
+    with torch.no_grad():
+        inputs = processor(text=[text], return_tensors="pt", padding=True)
+        outputs = model.get_text_features(**inputs)
+        embedding = outputs[0].numpy()
+        embedding = embedding / np.linalg.norm(embedding)
+
+    return embedding.astype(np.float32)
+
+
+def embedding_to_list(emb: Optional[np.ndarray]) -> list[float]:
+    """Convert numpy embedding to plain Python list for JSON serialization."""
+    if emb is None:
+        return []
+    return [float(x) for x in emb.tolist()]
+
+
+def list_to_embedding(lst: list[float]) -> Optional[np.ndarray]:
+    """Convert a JSON-serialized list back to numpy array."""
+    if not lst:
+        return None
+    return np.array(lst, dtype=np.float32)
+
+
+# ── Standalone test ───────────────────────────────────────────
+if __name__ == "__main__":
+    print("CLIP Embedder — Standalone Test")
+    print(f"Model: {CLIP_MODEL_NAME}")
+
+    # Try to embed a test image if one exists
+    import os
+    test_paths = [
+        "digital-twin/storage/screenshots/github_com.png",
+        "test_image.png",
+    ]
+    for tp in test_paths:
+        if os.path.exists(tp):
+            emb = get_image_embedding(tp)
+            if emb is not None:
+                print(f"Embedding for {tp}: shape={emb.shape}, norm={np.linalg.norm(emb):.4f}")
+                print(f"First 5 values: {emb[:5]}")
+            break
+    else:
+        print("No test image found. Run render.py first to capture a screenshot.")
+        # Just test model loading
+        _load_model()
+        print("Model loaded successfully!")
