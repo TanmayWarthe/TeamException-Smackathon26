@@ -1,0 +1,16 @@
+{
+  "name": "ctip-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CTIP Browser Extension — Campus Threat Intelligence Platform",
+  "scripts": {
+    "icons": "node scripts/generate-icons.mjs",
+    "build": "node scripts/generate-icons.mjs && node build.mjs",
+    "watch": "node build.mjs --watch",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.0"
+  }
+}
