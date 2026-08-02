@@ -1,0 +1,23 @@
+# CTIP AI/ML Pipeline — Python Dependencies
+# Install with: pip install -r requirements-ai.txt
+#
+# After installing, also run: playwright install chromium
+
+# ── Browser Automation ────────────────────────────────────────
+playwright>=1.40.0
+
+# ── Computer Vision ───────────────────────────────────────────
+opencv-python-headless>=4.8.0
+
+# ── Visual Embeddings (CLIP) ─────────────────────────────────
+transformers>=4.35.0
+torch>=2.1.0
+Pillow>=10.0.0
+
+# ── HTML/DOM Parsing ─────────────────────────────────────────
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# ── Math / Similarity ────────────────────────────────────────
+scikit-learn>=1.3.0
+numpy>=1.24.0
