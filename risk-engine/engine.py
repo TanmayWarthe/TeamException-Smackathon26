@@ -57,15 +57,15 @@ _twin_store = _load_mod("twin_store",
     _project_root / "digital-twin" / "storage" / "twin_store.py")
 
 
-def analyze_website(
+import asyncio
+
+
+async def analyze_website(
     candidate_url: str,
     digital_twin: dict[str, Any] | str,
 ) -> dict[str, Any]:
     """
-    Full end-to-end analysis of a candidate website against a Digital Twin.
-
-    This is the single entry point for the backend:
-        from risk_engine.engine import analyze_website
+    Full end-to-end analysis of a candidate website against a Digital Twin (async).
 
     Args:
         candidate_url: URL of the suspicious/candidate website.
@@ -103,7 +103,7 @@ def analyze_website(
 
     # ── Step 1: Extract evidence from candidate ──────────────
     print("\n[Step 1/4] Extracting evidence from candidate site...")
-    evidence = _evidence.extract_evidence(candidate_url)
+    evidence = await _evidence.extract_evidence(candidate_url)
 
     # ── Step 2: Run all similarity analyzers (fusion) ────────
     print("\n[Step 2/4] Running similarity analysis...")
@@ -156,13 +156,30 @@ def analyze_website(
     return response
 
 
-def analyze_website_with_details(
+def analyze_website_sync(
+    candidate_url: str,
+    digital_twin: dict[str, Any] | str,
+) -> dict[str, Any]:
+    """Synchronous wrapper for analyze_website()."""
+    try:
+        asyncio.get_running_loop()
+        raise RuntimeError(
+            "analyze_website_sync() cannot be called from a running event loop. "
+            "Use 'await analyze_website(candidate_url, digital_twin)' instead."
+        )
+    except RuntimeError as e:
+        if "cannot be called from a running event loop" in str(e):
+            raise
+        return asyncio.run(analyze_website(candidate_url, digital_twin))
+
+
+async def analyze_website_with_details(
     candidate_url: str,
     digital_twin: dict[str, Any] | str,
 ) -> dict[str, Any]:
     """
     Extended version of analyze_website that also returns per-analyzer
-    breakdowns for debugging and the SOC dashboard.
+    breakdowns for debugging and the SOC dashboard (async).
     """
     if isinstance(digital_twin, str):
         twin = _twin_store.load_twin(digital_twin)
@@ -171,7 +188,7 @@ def analyze_website_with_details(
     else:
         twin = digital_twin
 
-    evidence = _evidence.extract_evidence(candidate_url)
+    evidence = await _evidence.extract_evidence(candidate_url)
     fused_scores = _fusion.fuse(evidence, twin)
     risk_result = _scoring.calculate_risk(fused_scores)
     category = _categorize.categorize_risk(risk_result["risk_score"])
@@ -202,7 +219,25 @@ def analyze_website_with_details(
     }
 
 
+def analyze_website_with_details_sync(
+    candidate_url: str,
+    digital_twin: dict[str, Any] | str,
+) -> dict[str, Any]:
+    """Synchronous wrapper for analyze_website_with_details()."""
+    try:
+        asyncio.get_running_loop()
+        raise RuntimeError(
+            "analyze_website_with_details_sync() cannot be called from a running event loop. "
+            "Use 'await analyze_website_with_details(candidate_url, digital_twin)' instead."
+        )
+    except RuntimeError as e:
+        if "cannot be called from a running event loop" in str(e):
+            raise
+        return asyncio.run(analyze_website_with_details(candidate_url, digital_twin))
+
+
 # ── Standalone test ───────────────────────────────────────────
 if __name__ == "__main__":
     print("Risk Engine — requires a generated Digital Twin to test.")
     print("Run scripts/test_ai_pipeline.py for a full end-to-end test.")
+
