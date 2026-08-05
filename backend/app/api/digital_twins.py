@@ -10,6 +10,8 @@ from ..services.ai_service import generate_twin_fingerprint
 
 router = APIRouter(prefix="/digital-twins", tags=["digital-twins"])
 
+from datetime import datetime, timezone
+
 @router.get("", response_model=list[DigitalTwinResponse])
 async def list_digital_twins(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DigitalTwinModel).order_by(DigitalTwinModel.created_at.desc()))
@@ -32,26 +34,58 @@ async def list_digital_twins(db: AsyncSession = Depends(get_db)):
 async def create_digital_twin(req: CreateDigitalTwinRequest, db: AsyncSession = Depends(get_db)):
     domain = urlparse(req.official_url).hostname or req.official_url
     
-    # Trigger fingerprint generation
-    fp = generate_twin_fingerprint(req.official_url, req.website_name)
+    # Trigger fingerprint generation (async)
+    fp = await generate_twin_fingerprint(req.official_url, req.website_name)
+    if fp.get("error"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Failed to generate digital twin fingerprint: {fp.get('error')}"
+        )
     
-    twin = DigitalTwinModel(
-        website_name=req.website_name,
-        official_url=req.official_url,
-        domain=domain,
-        fingerprint_version=fp.get("fingerprint_version", 1),
-        screenshot_path=fp.get("screenshot_path", "/mock/screenshots/official_erp.png")
-    )
-    db.add(twin)
-    await db.commit()
-    await db.refresh(twin)
-    
-    return DigitalTwinResponse(
-        id=twin.id,
-        website_name=twin.website_name,
-        official_url=twin.official_url,
-        fingerprint_version=twin.fingerprint_version,
-        screenshot_path=twin.screenshot_path,
-        created_at=twin.created_at.isoformat(),
-        updated_at=twin.updated_at.isoformat(),
-    )
+    try:
+        # Check if twin already exists to prevent UNIQUE constraint violation
+        existing = await db.execute(
+            select(DigitalTwinModel).where(DigitalTwinModel.official_url == req.official_url)
+        )
+        twin = existing.scalars().first()
+        
+        now = datetime.now(timezone.utc)
+        if twin:
+            twin.website_name = req.website_name
+            twin.domain = domain
+            twin.fingerprint_version = fp.get("fingerprint_version", 1)
+            twin.screenshot_path = fp.get("screenshot_path", "")
+            twin.updated_at = now
+        else:
+            twin = DigitalTwinModel(
+                website_name=req.website_name,
+                official_url=req.official_url,
+                domain=domain,
+                fingerprint_version=fp.get("fingerprint_version", 1),
+                screenshot_path=fp.get("screenshot_path", ""),
+                created_at=now,
+                updated_at=now,
+            )
+            db.add(twin)
+            
+        await db.commit()
+        await db.refresh(twin)
+        
+        return DigitalTwinResponse(
+            id=twin.id,
+            website_name=twin.website_name,
+            official_url=twin.official_url,
+            fingerprint_version=twin.fingerprint_version,
+            screenshot_path=twin.screenshot_path or "/mock/screenshots/official_erp.png",
+            created_at=twin.created_at.isoformat() if twin.created_at else now.isoformat(),
+            updated_at=twin.updated_at.isoformat() if twin.updated_at else now.isoformat(),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save digital twin to database: {str(e)}"
+        )
+
