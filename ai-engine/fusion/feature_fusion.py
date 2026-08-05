@@ -100,6 +100,11 @@ def fuse(candidate_evidence: dict[str, Any], digital_twin: dict[str, Any]) -> di
     # Default to 70 as noted in spec (Chapter 8.4)
     javascript_score = 70.0
 
+    # ── Render status ────────────────────────────────────────
+    if candidate_evidence.get("render_failed"):
+        error_msg = candidate_evidence.get("render_error") or "Host unreachable"
+        red_flags.append(f"Target page unreachable or rendering failed ({error_msg})")
+
     result = {
         "visual": float(visual_score),
         "dom": float(dom_score),
@@ -111,10 +116,13 @@ def fuse(candidate_evidence: dict[str, Any], digital_twin: dict[str, Any]) -> di
         "javascript": float(javascript_score),
         "red_flags": red_flags,
         "_metadata": {
+            "render_failed": bool(candidate_evidence.get("render_failed", False)),
             "visual_has_data": candidate_evidence.get("visual_embedding") is not None,
             "logo_has_data": candidate_evidence.get("logo_embedding") is not None,
             "form_has_data": candidate_evidence.get("form_fingerprint", {}).get("form_count", 0) > 0,
             "css_has_data": len(candidate_evidence.get("css_colors", [])) > 0,
+            "candidate_domain": candidate_evidence.get("domain", ""),
+            "twin_domain": digital_twin.get("domain", ""),
         },
     }
 
