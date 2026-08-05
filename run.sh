@@ -49,7 +49,7 @@ echo "Press Ctrl+C to stop all services."
 echo ""
 
 # Start backend
-$UVICORN_BIN backend.app.main:app --host 0.0.0.0 --port 8000 --reload &
+$UVICORN_BIN app.main:app --app-dir backend --host 0.0.0.0 --port 8000 --reload &
 BACKEND_PID=$!
 
 # Start frontend
