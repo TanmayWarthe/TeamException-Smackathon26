@@ -37,9 +37,12 @@ _form_ext = _import_module("form_ext", str(_base / "forms" / "form_extractor.py"
 _ss_proc = _import_module("ss_proc", str(_base / "screenshots" / "processor.py"))
 
 
-def extract_evidence(url: str) -> dict[str, Any]:
+import asyncio
+
+
+async def extract_evidence(url: str) -> dict[str, Any]:
     """
-    Process a candidate website into structured evidence for comparison.
+    Process a candidate website into structured evidence for comparison (async).
 
     This produces the SAME shape as a Digital Twin's data so ai-engine
     can diff them directly.
@@ -56,6 +59,8 @@ def extract_evidence(url: str) -> dict[str, Any]:
             - form_fingerprint (dict)
             - css_colors (list of hex strings)
             - detected_at (ISO timestamp)
+            - render_failed (bool)
+            - render_error (str | None)
     """
     domain = urlparse(url).hostname or "unknown"
     safe_name = sanitize_domain(domain)
@@ -65,12 +70,12 @@ def extract_evidence(url: str) -> dict[str, Any]:
     # Step 1: Render the page (reuse digital-twin's renderer)
     screenshot_path = str(SCREENSHOTS_DIR / f"candidate_{safe_name}.png")
     try:
-        render_result = _render.render_page_sync(url, screenshot_path=screenshot_path)
+        render_result = await _render.render_page(url, screenshot_path=screenshot_path)
     except Exception as e:
         print(f"[Evidence] Render failed for {url}: {e}")
-        return _empty_evidence(url, domain)
+        return _empty_evidence(url, domain, error=str(e))
 
-    print(f"[Evidence] Rendered. Title: {render_result['title']}")
+    print(f"[Evidence] Rendered. Title: {render_result.get('title', '')}")
 
     # Step 2: Normalize HTML
     clean_html = _normalizer.normalize_html(render_result["html"])
@@ -92,7 +97,7 @@ def extract_evidence(url: str) -> dict[str, Any]:
     # Step 6: Extract logo
     logo_path = _logo_ext.extract_logo(
         screenshot_path=screenshot_path,
-        img_elements=render_result["img_elements"],
+        img_elements=render_result.get("img_elements", []),
         domain=domain,
         logo_save_path=str(LOGOS_DIR / f"candidate_{safe_name}_logo.png"),
     )
@@ -116,13 +121,29 @@ def extract_evidence(url: str) -> dict[str, Any]:
         "form_fingerprint": form_fingerprint,
         "css_colors": css_colors,
         "detected_at": datetime.now(timezone.utc).isoformat(),
+        "render_failed": False,
+        "render_error": None,
     }
 
     print(f"[Evidence] Extraction complete for {domain}")
     return evidence
 
 
-def _empty_evidence(url: str, domain: str) -> dict[str, Any]:
+def extract_evidence_sync(url: str) -> dict[str, Any]:
+    """Synchronous wrapper for extract_evidence()."""
+    try:
+        asyncio.get_running_loop()
+        raise RuntimeError(
+            "extract_evidence_sync() cannot be called from a running event loop. "
+            "Use 'await extract_evidence(url)' instead."
+        )
+    except RuntimeError as e:
+        if "cannot be called from a running event loop" in str(e):
+            raise
+        return asyncio.run(extract_evidence(url))
+
+
+def _empty_evidence(url: str, domain: str, error: str | None = None) -> dict[str, Any]:
     """Return a fallback evidence dict when rendering fails."""
     return {
         "candidate_url": url,
@@ -144,6 +165,8 @@ def _empty_evidence(url: str, domain: str) -> dict[str, Any]:
         },
         "css_colors": [],
         "detected_at": datetime.now(timezone.utc).isoformat(),
+        "render_failed": True,
+        "render_error": error,
     }
 
 
@@ -152,7 +175,7 @@ if __name__ == "__main__":
     import json
     import numpy as np
 
-    evidence = extract_evidence("https://github.com/login")
+    evidence = extract_evidence_sync("https://github.com/login")
 
     # Print summary (mask embeddings)
     summary = {}
@@ -165,3 +188,4 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("Evidence Extracted:")
     print(json.dumps(summary, indent=2, default=str))
+
