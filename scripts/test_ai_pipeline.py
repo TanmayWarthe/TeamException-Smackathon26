@@ -62,7 +62,7 @@ def main():
         print(f"  ✅ Twin already exists for {twin_domain}, reusing it.")
         twin = existing_twin
     else:
-        twin = fingerprint_mod.generate_fingerprint(
+        twin = fingerprint_mod.generate_fingerprint_sync(
             url=official_url,
             website_name="GitHub Login (Test Twin)",
         )
@@ -111,7 +111,7 @@ def main():
         start = time.time()
 
         try:
-            result = engine_mod.analyze_website(url, twin)
+            result = engine_mod.analyze_website_sync(url, twin)
             elapsed = time.time() - start
 
             results.append({
