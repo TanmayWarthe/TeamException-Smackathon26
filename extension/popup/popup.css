@@ -347,3 +347,18 @@ body {
   background: #22d3ee;
   transition: width 0.6s ease-out;
 }
+
+/* Spinner */
+.ctip-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(34, 211, 238, 0.2);
+  border-top-color: #22d3ee;
+  border-radius: 50%;
+  animation: ctip-spin 0.8s linear infinite;
+  margin: 12px auto;
+}
+
+@keyframes ctip-spin {
+  to { transform: rotate(360deg); }
+}
