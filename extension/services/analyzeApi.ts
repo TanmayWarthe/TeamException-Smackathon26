@@ -103,8 +103,9 @@ export async function analyzeSite(payload: CandidateWebsite): Promise<AnalysisRe
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url: payload.url,
-        html: payload.html || undefined,
-        dom_snapshot: payload.html || undefined
+        html: payload.domSnapshot || undefined,
+        dom_snapshot: payload.domSnapshot || undefined,
+        domSnapshot: payload.domSnapshot || undefined,
       }),
       signal: controller.signal
     });
