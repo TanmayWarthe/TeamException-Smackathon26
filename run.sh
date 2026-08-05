@@ -31,6 +31,12 @@ if [ ! -d "frontend/node_modules" ]; then
     cd frontend && npm install && cd ..
 fi
 
+# 3. Check browser extension build
+if [ ! -d "extension/dist" ] || [ ! -f "extension/dist/manifest.json" ]; then
+    echo "🧩 Building Browser Extension..."
+    cd extension && npm install && node build.mjs && cd ..
+fi
+
 echo ""
 echo "🚀 Starting CTIP Services..."
 echo "----------------------------------------------------------"
