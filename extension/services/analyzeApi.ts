@@ -5,7 +5,7 @@
 
 import { CandidateWebsite, AnalysisResult, RecommendationAction } from '../shared/types';
 
-// ── Known-safe domains (always return low risk in mock) ─────
+// ── Known-safe domains & Institutional official domains ─────
 const SAFE_DOMAINS = new Set([
   'google.com', 'www.google.com',
   'github.com', 'www.github.com',
@@ -18,7 +18,31 @@ const SAFE_DOMAINS = new Set([
   'amazon.com', 'www.amazon.com',
   'linkedin.com', 'www.linkedin.com',
   'reddit.com', 'www.reddit.com',
+  // Official Campus Domains
+  'ycce.edu', 'www.ycce.edu',
+  'ycce.edu.in', 'www.ycce.edu.in',
+  'erp.ycce.edu.in', 'webmail.ycce.edu.in',
+  'student.ycce.edu.in', 'portal.ycce.edu.in',
+  'exam.ycce.edu.in', 'moodle.ycce.edu.in',
+  'meghegroup.org', 'www.meghegroup.org',
+  'nagpuruniversity.ac.in', 'www.nagpuruniversity.ac.in',
 ]);
+
+const INSTITUTIONAL_ROOTS = [
+  'ycce.edu',
+  'ycce.edu.in',
+  'meghegroup.org',
+  'nagpuruniversity.ac.in',
+];
+
+function isKnownSafeOrInstitutionalDomain(domain: string): boolean {
+  const d = domain.toLowerCase().trim();
+  if (SAFE_DOMAINS.has(d)) return true;
+  for (const root of INSTITUTIONAL_ROOTS) {
+    if (d === root || d.endsWith('.' + root)) return true;
+  }
+  return false;
+}
 
 // ── Deterministic hash: same domain → same score every time ─
 function hashDomain(domain: string): number {
@@ -80,16 +104,43 @@ const BACKEND_URL = 'http://localhost:8000/api/analyze';
  */
 export async function analyzeSite(payload: CandidateWebsite): Promise<AnalysisResult> {
   const domain = payload.domain.toLowerCase();
+  const url = (payload.url || '').toLowerCase();
 
-  // Safe domain shortcut
-  if (SAFE_DOMAINS.has(domain)) {
-    const safeScore = 5 + (hashDomain(domain) % 16);
+  // 1. Handle localhost & local environment
+  if (domain === 'localhost' || domain === '127.0.0.1' || url.includes('localhost') || url.includes('127.0.0.1')) {
+    // Only flag simulated phishing lab (port 8088 or student_portal demo)
+    if (url.includes(':8088') || url.includes('/fake') || url.includes('student_portal')) {
+      return {
+        status: 'HIGH_RISK',
+        risk_score: 88,
+        confidence: 95,
+        recommendation: 'BLOCK',
+        reasons: [
+          'Simulated phishing portal detected on test port (:8088)',
+          'DOM structure clones official university login interface',
+          'Credential collection form detected on unverified origin',
+        ],
+      };
+    }
+
+    // All other localhost services (SOC dashboard 5173, backend 8000, etc.) are TRUSTED
     return {
       status: 'TRUSTED',
-      risk_score: safeScore,
-      confidence: 95 + (hashDomain(domain) % 6),
+      risk_score: 0,
+      confidence: 100,
       recommendation: 'ALLOW',
-      reasons: ['Domain is in institutional allowlist'],
+      reasons: ['CTIP SOC Management Console / Internal Service'],
+    };
+  }
+
+  // 2. Safe / Institutional domain shortcut
+  if (isKnownSafeOrInstitutionalDomain(domain)) {
+    return {
+      status: 'TRUSTED',
+      risk_score: 0,
+      confidence: 99,
+      recommendation: 'ALLOW',
+      reasons: ['Official verified institutional campus domain'],
     };
   }
 

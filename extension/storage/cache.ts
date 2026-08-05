@@ -50,6 +50,14 @@ export async function setCachedResult(domain: string, result: AnalysisResult): P
 }
 
 /**
+ * Remove cached entry for a single domain.
+ */
+export async function removeCachedResult(domain: string): Promise<void> {
+  const key = cacheKey(domain);
+  await chrome.storage.local.remove(key);
+}
+
+/**
  * Clear all CTIP cache entries.
  */
 export async function clearCache(): Promise<void> {

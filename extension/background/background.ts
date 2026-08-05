@@ -4,7 +4,7 @@
 // caches results, and updates badge + popup + content scripts.
 
 import { analyzeSite } from '../services/analyzeApi';
-import { getCachedResult, setCachedResult } from '../storage/cache';
+import { getCachedResult, setCachedResult, removeCachedResult, clearCache } from '../storage/cache';
 import { CandidateWebsite, AnalysisResult, ExtensionMessage, PopupStatusResponse, getRiskLevel } from '../shared/types';
 
 // ── In-memory state for active tabs ─────────────────────────
@@ -47,19 +47,31 @@ function updateBadge(tabId: number, result: AnalysisResult | null): void {
   }
 }
 
+function getDomainKey(urlStr: string, defaultDomain: string): string {
+  try {
+    const parsed = new URL(urlStr);
+    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+      return `${parsed.hostname}:${parsed.port || '80'}`;
+    }
+    return parsed.hostname.toLowerCase();
+  } catch {
+    return defaultDomain.toLowerCase();
+  }
+}
+
 // ── Handle Page Detection ────────────────────────────────────
 async function handleLoginDetected(
   payload: CandidateWebsite,
   senderTabId: number
 ): Promise<AnalysisResult> {
-  const domain = payload.domain.toLowerCase();
+  const domainKey = getDomainKey(payload.url, payload.domain);
 
   // Check cache first
-  const cached = await getCachedResult(domain);
+  const cached = await getCachedResult(domainKey);
   if (cached) {
-    console.log(`[CTIP] Cache hit for ${domain}: score=${cached.result.risk_score}`);
+    console.log(`[CTIP] Cache hit for ${domainKey}: score=${cached.result.risk_score}`);
     tabStates.set(senderTabId, {
-      domain,
+      domain: domainKey,
       url: payload.url,
       result: cached.result,
       cachedAt: cached.cachedAt,
@@ -70,16 +82,16 @@ async function handleLoginDetected(
   }
 
   // No cache — call analyze API
-  console.log(`[CTIP] Analyzing ${domain}...`);
+  console.log(`[CTIP] Analyzing ${domainKey}...`);
   try {
     const result = await analyzeSite(payload);
 
     // Cache the result
-    await setCachedResult(domain, result);
+    await setCachedResult(domainKey, result);
 
     const now = new Date().toISOString();
     tabStates.set(senderTabId, {
-      domain,
+      domain: domainKey,
       url: payload.url,
       result,
       cachedAt: now,
@@ -88,7 +100,7 @@ async function handleLoginDetected(
     updateBadge(senderTabId, result);
     notifyContentScript(senderTabId, result);
 
-    console.log(`[CTIP] Analysis complete for ${domain}: score=${result.risk_score} (${result.status})`);
+    console.log(`[CTIP] Analysis complete for ${domainKey}: score=${result.risk_score} (${result.status})`);
     return result;
   } catch (err) {
     console.error('[CTIP] Analysis failed:', err);
@@ -139,6 +151,49 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
       return true; // async response
     }
 
+    case 'POPUP_FORCE_RESCAN': {
+      (async () => {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tab?.id && tab.url && tab.url.startsWith('http')) {
+          const rawDomain = new URL(tab.url).hostname;
+          const domainKey = getDomainKey(tab.url, rawDomain);
+
+          // Force clear cache for this domain
+          await removeCachedResult(domainKey);
+          await removeCachedResult(rawDomain);
+          tabStates.delete(tab.id);
+
+          const result = await analyzeSite({
+            url: tab.url,
+            domain: rawDomain,
+            title: tab.title || '',
+            domSnapshot: '',
+            inputFieldCount: 0,
+            buttonLabels: [],
+            logoSrc: null,
+            timestamp: new Date().toISOString(),
+          });
+
+          await setCachedResult(domainKey, result);
+          const now = new Date().toISOString();
+
+          tabStates.set(tab.id, {
+            domain: domainKey,
+            url: tab.url,
+            result,
+            cachedAt: now,
+          });
+
+          updateBadge(tab.id, result);
+          notifyContentScript(tab.id, result);
+          sendResponse({ ok: true, result });
+        } else {
+          sendResponse({ ok: false, error: 'No active http tab' });
+        }
+      })();
+      return true; // async response
+    }
+
     default:
       return false;
   }
@@ -158,11 +213,12 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
       };
     }
 
-    const domain = new URL(tab.url).hostname;
+    const rawDomain = new URL(tab.url).hostname;
+    const domainKey = getDomainKey(tab.url, rawDomain);
 
     // 1. Check in-memory state
     const state = tabStates.get(tab.id);
-    if (state && state.domain === domain && state.result) {
+    if (state && state.domain === domainKey && state.result) {
       return {
         connected: true,
         domain: state.domain,
@@ -173,10 +229,10 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
     }
 
     // 2. Check storage cache
-    const cached = await getCachedResult(domain);
+    const cached = await getCachedResult(domainKey);
     if (cached) {
       tabStates.set(tab.id, {
-        domain,
+        domain: domainKey,
         url: tab.url,
         result: cached.result,
         cachedAt: cached.cachedAt,
@@ -184,7 +240,7 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
       updateBadge(tab.id, cached.result);
       return {
         connected: true,
-        domain,
+        domain: domainKey,
         url: tab.url,
         result: cached.result,
         cachedAt: cached.cachedAt,
@@ -194,8 +250,8 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
     // 3. Auto-analyze on popup open if not cached yet
     const candidate: CandidateWebsite = {
       url: tab.url,
-      domain,
-      title: tab.title || domain,
+      domain: rawDomain,
+      title: tab.title || rawDomain,
       domSnapshot: '',
       inputFieldCount: 0,
       buttonLabels: [],
@@ -204,11 +260,11 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
     };
 
     const result = await analyzeSite(candidate);
-    await setCachedResult(domain, result);
+    await setCachedResult(domainKey, result);
     const now = new Date().toISOString();
 
     tabStates.set(tab.id, {
-      domain,
+      domain: domainKey,
       url: tab.url,
       result,
       cachedAt: now,
@@ -217,7 +273,7 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
 
     return {
       connected: true,
-      domain,
+      domain: domainKey,
       url: tab.url,
       result,
       cachedAt: now,
@@ -268,8 +324,14 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
   }
 });
 
-chrome.tabs.onRemoved.addListener((tabId) => {
-  tabStates.delete(tabId);
+chrome.runtime.onInstalled.addListener(async () => {
+  console.log('[CTIP] Extension installed/updated — clearing stale storage cache.');
+  try {
+    await clearCache();
+    tabStates.clear();
+  } catch (e) {
+    console.debug('[CTIP] Cache clear on install error:', e);
+  }
 });
 
 console.log('[CTIP] Background service worker initialized.');

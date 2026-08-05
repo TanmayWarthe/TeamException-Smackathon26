@@ -16,6 +16,13 @@ function detectAndReport(): void {
   // Only run on standard web pages
   if (!window.location.protocol.startsWith('http')) return;
 
+  // Never scan or inject warnings onto the SOC dashboard itself
+  const host = window.location.hostname;
+  const port = window.location.port;
+  if ((host === 'localhost' || host === '127.0.0.1') && (port === '5173' || port === '8000' || port === '3000')) {
+    return;
+  }
+
   const isLogin = isLoginPage();
   const meta = collectFormMetadata();
 

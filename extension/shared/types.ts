@@ -55,6 +55,7 @@ export type MessageType =
   | 'ANALYSIS_RESULT'
   | 'POPUP_REQUEST_STATUS'
   | 'POPUP_STATUS_RESPONSE'
+  | 'POPUP_FORCE_RESCAN'
   | 'INJECT_WARNING';
 
 export interface ExtensionMessage {

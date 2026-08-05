@@ -101,7 +101,7 @@ function triggerScan(domain: string, url: string): void {
 
   chrome.runtime.sendMessage(
     {
-      type: 'CONTENT_DETECTED_LOGIN',
+      type: 'POPUP_FORCE_RESCAN',
       payload: {
         url,
         domain: domain || (url.startsWith('http') ? new URL(url).hostname : 'unknown'),
@@ -116,7 +116,7 @@ function triggerScan(domain: string, url: string): void {
     (res) => {
       setTimeout(() => {
         init();
-      }, 500);
+      }, 400);
     }
   );
 }
@@ -218,7 +218,7 @@ function renderRisk(result: AnalysisResult, cachedAt: string | null, domain?: st
 
   // SOC portal link
   document.getElementById('btn-soc')?.addEventListener('click', () => {
-    chrome.tabs.create({ url: 'http://localhost:3000' });
+    chrome.tabs.create({ url: 'http://localhost:5173' });
   });
 
   // Last analysis timestamp
