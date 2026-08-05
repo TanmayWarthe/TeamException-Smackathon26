@@ -61,9 +61,21 @@ def get_image_embedding(image_path: str) -> Optional[np.ndarray]:
     with torch.no_grad():
         inputs = processor(images=image, return_tensors="pt")
         outputs = model.get_image_features(**inputs)
-        # Normalize the embedding
-        embedding = outputs[0].numpy()
-        embedding = embedding / np.linalg.norm(embedding)
+        if hasattr(outputs, "pooler_output") and outputs.pooler_output is not None:
+            feat = outputs.pooler_output
+        elif hasattr(outputs, "image_embeds") and outputs.image_embeds is not None:
+            feat = outputs.image_embeds
+        elif isinstance(outputs, torch.Tensor):
+            feat = outputs
+        else:
+            feat = outputs[0]
+
+        embedding = feat.squeeze().cpu().numpy()
+        if embedding.ndim > 1:
+            embedding = embedding.flatten()
+        norm = np.linalg.norm(embedding)
+        if norm > 0:
+            embedding = embedding / norm
 
     return embedding.astype(np.float32)
 
@@ -82,10 +94,24 @@ def get_text_embedding(text: str) -> np.ndarray:
     with torch.no_grad():
         inputs = processor(text=[text], return_tensors="pt", padding=True)
         outputs = model.get_text_features(**inputs)
-        embedding = outputs[0].numpy()
-        embedding = embedding / np.linalg.norm(embedding)
+        if hasattr(outputs, "pooler_output") and outputs.pooler_output is not None:
+            feat = outputs.pooler_output
+        elif hasattr(outputs, "text_embeds") and outputs.text_embeds is not None:
+            feat = outputs.text_embeds
+        elif isinstance(outputs, torch.Tensor):
+            feat = outputs
+        else:
+            feat = outputs[0]
+
+        embedding = feat.squeeze().cpu().numpy()
+        if embedding.ndim > 1:
+            embedding = embedding.flatten()
+        norm = np.linalg.norm(embedding)
+        if norm > 0:
+            embedding = embedding / norm
 
     return embedding.astype(np.float32)
+
 
 
 def embedding_to_list(emb: Optional[np.ndarray]) -> list[float]:
