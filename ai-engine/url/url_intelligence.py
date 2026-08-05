@@ -108,18 +108,29 @@ def compute_url_intelligence(
         "in", "co", "uk", "us", "au", "de", "fr", "io",
         "www", "http", "https",
     }
-    twin_parts = clean_twin.replace(".", " ").split()
-    # Split candidate on dots and hyphens to get real word segments
-    cand_segments = set(re.split(r"[.\-]", clean_cand))
-    for part in twin_parts:
-        if part in _GENERIC_TOKENS:
-            continue  # Never flag generic TLD/CC tokens as brand names
-        if len(part) < 3:
-            continue  # Too short — too many false positives
-        if part in cand_segments and clean_cand != clean_twin:
-            penalties += 15
-            red_flags.append(f"Official brand name '{part}' embedded in suspicious domain")
-            break
+    # Skip if candidate and twin share the same official institutional base
+    is_inst_match = (
+        clean_cand == clean_twin
+        or clean_cand.endswith("." + clean_twin)
+        or clean_twin.endswith("." + clean_cand)
+        or any(
+            (clean_cand == root or clean_cand.endswith("." + root)) and (clean_twin == root or clean_twin.endswith("." + root))
+            for root in ["ycce.edu", "ycce.edu.in", "meghegroup.org"]
+        )
+    )
+
+    if not is_inst_match:
+        twin_parts = clean_twin.replace(".", " ").split()
+        cand_segments = set(re.split(r"[.\-]", clean_cand))
+        for part in twin_parts:
+            if part in _GENERIC_TOKENS:
+                continue  # Never flag generic TLD/CC tokens as brand names
+            if len(part) < 3:
+                continue  # Too short — too many false positives
+            if part in cand_segments:
+                penalties += 15
+                red_flags.append(f"Official brand name '{part}' embedded in suspicious domain")
+                break
 
     # ── 7. Homograph detection (basic) ───────────────────────
     # Check for non-ASCII characters that look like Latin letters
