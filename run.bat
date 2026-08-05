@@ -26,6 +26,15 @@ if not exist "frontend\node_modules" (
     cd ..
 )
 
+:: 3. Check browser extension build
+if not exist "extension\dist\manifest.json" (
+    echo [!] Building Browser Extension...
+    cd extension
+    call npm install
+    node build.mjs
+    cd ..
+)
+
 echo.
 echo ==========================================================
 echo   Starting CTIP Services...
