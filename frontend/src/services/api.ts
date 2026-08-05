@@ -17,11 +17,20 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const client = axios.create({
   baseURL: API_BASE,
-  timeout: 4000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   }
 });
+
+client.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 
 export const api = {
   // Dashboard
@@ -52,15 +61,15 @@ export const api = {
     }
   },
 
-  // Threats
-  async getThreats(): Promise<Threat[]> {
-    try {
-      const res = await client.get('/threats');
-      return res.data;
-    } catch {
-      return mockThreats;
-    }
-  },
+
+    // Threats
+async getThreats(): Promise<Threat[]> {
+  const res = await client.get('/threats');
+  return res.data;
+},
+
+
+
 
   async getThreatDetail(id: string) {
     try {
