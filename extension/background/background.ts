@@ -1,15 +1,13 @@
 // background/background.ts
 // CTIP Background Service Worker — central message router.
-// Receives login-page data from content scripts, calls the analyze API,
-// caches results, and notifies popup + content scripts of findings.
+// Receives page data from content scripts & popup, calls the analyze API,
+// caches results, and updates badge + popup + content scripts.
 
 import { analyzeSite } from '../services/analyzeApi';
 import { getCachedResult, setCachedResult } from '../storage/cache';
 import { CandidateWebsite, AnalysisResult, ExtensionMessage, PopupStatusResponse, getRiskLevel } from '../shared/types';
 
-// ── In-memory state for the current active tab ───────────────
-// Service workers can be terminated, so we persist via chrome.storage too.
-// This in-memory map is just for fast access while the worker is alive.
+// ── In-memory state for active tabs ─────────────────────────
 interface TabState {
   domain: string;
   url: string;
@@ -21,33 +19,39 @@ const tabStates = new Map<number, TabState>();
 
 // ── Badge colors matching risk theme ─────────────────────────
 const BADGE_COLORS: Record<string, string> = {
-  TRUSTED:    '#4ade80',
-  LOW:        '#facc15',
-  SUSPICIOUS: '#fb923c',
-  HIGH:       '#f87171',
-  CRITICAL:   '#ef4444',
+  TRUSTED:    '#22c55e',
+  LOW:        '#eab308',
+  SUSPICIOUS: '#f97316',
+  HIGH:       '#ef4444',
+  CRITICAL:   '#dc2626',
 };
 
 // ── Update Extension Badge ───────────────────────────────────
 function updateBadge(tabId: number, result: AnalysisResult | null): void {
-  if (!result) {
-    chrome.action.setBadgeText({ text: '', tabId });
-    return;
+  try {
+    if (!result) {
+      chrome.action.setBadgeText({ text: '', tabId });
+      return;
+    }
+
+    const level = getRiskLevel(result.risk_score);
+    const text = result.risk_score.toString();
+
+    chrome.action.setBadgeText({ text, tabId });
+    chrome.action.setBadgeBackgroundColor({ color: BADGE_COLORS[level] || '#64748b', tabId });
+    if (chrome.action.setBadgeTextColor) {
+      chrome.action.setBadgeTextColor({ color: '#ffffff', tabId });
+    }
+  } catch (e) {
+    console.debug('[CTIP] Badge update failed:', e);
   }
-
-  const level = getRiskLevel(result.risk_score);
-  const text = result.risk_score.toString();
-
-  chrome.action.setBadgeText({ text, tabId });
-  chrome.action.setBadgeBackgroundColor({ color: BADGE_COLORS[level] || '#64748b', tabId });
-  chrome.action.setBadgeTextColor({ color: '#000000', tabId });
 }
 
-// ── Handle Login Page Detection from Content Script ──────────
+// ── Handle Page Detection ────────────────────────────────────
 async function handleLoginDetected(
   payload: CandidateWebsite,
   senderTabId: number
-): Promise<void> {
+): Promise<AnalysisResult> {
   const domain = payload.domain.toLowerCase();
 
   // Check cache first
@@ -62,13 +66,12 @@ async function handleLoginDetected(
     });
     updateBadge(senderTabId, cached.result);
     notifyContentScript(senderTabId, cached.result);
-    return;
+    return cached.result;
   }
 
   // No cache — call analyze API
   console.log(`[CTIP] Analyzing ${domain}...`);
   try {
-    // TODO: Replace analyzeSite mock with real backend call
     const result = await analyzeSite(payload);
 
     // Cache the result
@@ -86,21 +89,22 @@ async function handleLoginDetected(
     notifyContentScript(senderTabId, result);
 
     console.log(`[CTIP] Analysis complete for ${domain}: score=${result.risk_score} (${result.status})`);
+    return result;
   } catch (err) {
     console.error('[CTIP] Analysis failed:', err);
+    throw err;
   }
 }
 
 // ── Notify Content Script (for warning banner injection) ─────
 function notifyContentScript(tabId: number, result: AnalysisResult): void {
-  // Only send warning injection for HIGH or CRITICAL
   if (result.risk_score <= 70) return;
 
   chrome.tabs.sendMessage(tabId, {
     type: 'ANALYSIS_RESULT',
     payload: result,
   } as ExtensionMessage).catch(() => {
-    // Content script may not be ready yet — that's fine
+    // Content script might not be loaded yet
   });
 }
 
@@ -110,19 +114,25 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
 
   switch (message.type) {
     case 'CONTENT_DETECTED_LOGIN': {
-      if (!tabId) {
-        sendResponse({ ok: false, error: 'No tab id' });
-        return true;
-      }
       const payload = message.payload as CandidateWebsite;
-      handleLoginDetected(payload, tabId).then(() => {
-        sendResponse({ ok: true });
-      });
+      let targetTabId = tabId;
+
+      (async () => {
+        if (!targetTabId) {
+          const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+          targetTabId = activeTab?.id;
+        }
+        if (targetTabId) {
+          const res = await handleLoginDetected(payload, targetTabId);
+          sendResponse({ ok: true, result: res });
+        } else {
+          sendResponse({ ok: false, error: 'No active tab found' });
+        }
+      })();
       return true; // async response
     }
 
     case 'POPUP_REQUEST_STATUS': {
-      // Popup is asking for current tab status
       handlePopupStatusRequest().then((response) => {
         sendResponse(response);
       });
@@ -138,11 +148,11 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
 async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab?.id || !tab.url) {
+    if (!tab?.id || !tab.url || !tab.url.startsWith('http')) {
       return {
         connected: true,
-        domain: '',
-        url: '',
+        domain: tab?.url ? (tab.url.startsWith('http') ? new URL(tab.url).hostname : tab.url) : '—',
+        url: tab?.url || '—',
         result: null,
         cachedAt: null,
       };
@@ -150,9 +160,9 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
 
     const domain = new URL(tab.url).hostname;
 
-    // Check in-memory state first
+    // 1. Check in-memory state
     const state = tabStates.get(tab.id);
-    if (state && state.domain === domain) {
+    if (state && state.domain === domain && state.result) {
       return {
         connected: true,
         domain: state.domain,
@@ -162,9 +172,16 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
       };
     }
 
-    // Check cache
+    // 2. Check storage cache
     const cached = await getCachedResult(domain);
     if (cached) {
+      tabStates.set(tab.id, {
+        domain,
+        url: tab.url,
+        result: cached.result,
+        cachedAt: cached.cachedAt,
+      });
+      updateBadge(tab.id, cached.result);
       return {
         connected: true,
         domain,
@@ -174,14 +191,39 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
       };
     }
 
+    // 3. Auto-analyze on popup open if not cached yet
+    const candidate: CandidateWebsite = {
+      url: tab.url,
+      domain,
+      title: tab.title || domain,
+      domSnapshot: '',
+      inputFieldCount: 0,
+      buttonLabels: [],
+      logoSrc: null,
+      timestamp: new Date().toISOString(),
+    };
+
+    const result = await analyzeSite(candidate);
+    await setCachedResult(domain, result);
+    const now = new Date().toISOString();
+
+    tabStates.set(tab.id, {
+      domain,
+      url: tab.url,
+      result,
+      cachedAt: now,
+    });
+    updateBadge(tab.id, result);
+
     return {
       connected: true,
       domain,
       url: tab.url,
-      result: null,
-      cachedAt: null,
+      result,
+      cachedAt: now,
     };
   } catch (err) {
+    console.error('[CTIP] Status request failed:', err);
     return {
       connected: false,
       domain: '',
@@ -192,12 +234,37 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
   }
 }
 
-// ── Tab Navigation Listener — clear stale state ──────────────
-chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+// ── Tab Listeners ────────────────────────────────────────────
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'loading') {
-    // Clear previous state for this tab when navigation starts
     tabStates.delete(tabId);
     updateBadge(tabId, null);
+  }
+});
+
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  try {
+    const tab = await chrome.tabs.get(activeInfo.tabId);
+    if (tab?.url && tab.url.startsWith('http')) {
+      const domain = new URL(tab.url).hostname;
+      const state = tabStates.get(activeInfo.tabId);
+      if (state?.result) {
+        updateBadge(activeInfo.tabId, state.result);
+      } else {
+        const cached = await getCachedResult(domain);
+        if (cached) {
+          tabStates.set(activeInfo.tabId, {
+            domain,
+            url: tab.url,
+            result: cached.result,
+            cachedAt: cached.cachedAt,
+          });
+          updateBadge(activeInfo.tabId, cached.result);
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore tab get errors
   }
 });
 
@@ -205,5 +272,4 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   tabStates.delete(tabId);
 });
 
-// ── Startup Log ──────────────────────────────────────────────
 console.log('[CTIP] Background service worker initialized.');
