@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "CTIP — Campus Threat Intelligence",
+  "version": "0.1.0",
+  "description": "Detects phishing & credential-harvesting pages targeting university portals. Part of the Campus Threat Intelligence Platform.",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": [
+      "background/background.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content/content.js"
+      ],
+      "css": [
+        "content/content-inject.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "48": "assets/icon-48.png",
+      "128": "assets/icon-128.png"
+    },
+    "default_title": "CTIP — Check site risk"
+  },
+  "icons": {
+    "16": "assets/icon-16.png",
+    "48": "assets/icon-48.png",
+    "128": "assets/icon-128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ctip-extension@campus-threat-intelligence.org",
+      "strict_min_version": "109.0"
+    }
+  }
+}

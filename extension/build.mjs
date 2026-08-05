@@ -39,42 +39,74 @@ const entries = [
   },
 ];
 
-// ── Copy static files to dist ────────────────────────────────
+import { readFileSync, writeFileSync } from 'fs';
+
+// ── Copy static files to dist and dist-firefox ───────────────
 function copyStatic() {
   const staticFiles = [
-    ['manifest.json', 'dist/manifest.json'],
-    ['popup/index.html', 'dist/popup/index.html'],
-    ['popup/popup.css', 'dist/popup/popup.css'],
-    ['content/content-inject.css', 'dist/content/content-inject.css'],
+    ['popup/index.html', 'popup/index.html'],
+    ['popup/popup.css', 'popup/popup.css'],
+    ['content/content-inject.css', 'content/content-inject.css'],
   ];
 
-  // Ensure directories exist
-  ['dist', 'dist/popup', 'dist/content', 'dist/background', 'dist/assets'].forEach((dir) => {
+  // Ensure directories exist for both Chrome (dist) and Firefox (dist-firefox)
+  ['dist', 'dist/popup', 'dist/content', 'dist/background', 'dist/assets',
+   'dist-firefox', 'dist-firefox/popup', 'dist-firefox/content', 'dist-firefox/background', 'dist-firefox/assets'
+  ].forEach((dir) => {
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   });
 
-  staticFiles.forEach(([src, dest]) => {
+  // Copy Chrome manifest
+  if (existsSync('manifest.json')) {
+    copyFileSync('manifest.json', 'dist/manifest.json');
+    console.log(`  copied manifest.json → dist/manifest.json (Chrome)`);
+
+    // Create Firefox-compatible manifest for dist-firefox
+    const rawManifest = JSON.parse(readFileSync('manifest.json', 'utf-8'));
+    const firefoxManifest = {
+      ...rawManifest,
+      background: {
+        scripts: ['background/background.js']
+      },
+      browser_specific_settings: {
+        gecko: {
+          id: "ctip-extension@campus-threat-intelligence.org",
+          strict_min_version: "109.0"
+        }
+      }
+    };
+    writeFileSync('dist-firefox/manifest.json', JSON.stringify(firefoxManifest, null, 2));
+    console.log(`  generated dist-firefox/manifest.json (Firefox)`);
+  }
+
+  staticFiles.forEach(([src, relativeDest]) => {
     if (existsSync(src)) {
-      copyFileSync(src, dest);
-      console.log(`  copied ${src} → ${dest}`);
+      copyFileSync(src, `dist/${relativeDest}`);
+      copyFileSync(src, `dist-firefox/${relativeDest}`);
+      console.log(`  copied ${src} → dist & dist-firefox`);
     }
   });
 
-  // Copy assets (icons)
+  // Copy assets (icons) to both
   if (existsSync('assets')) {
     readdirSync('assets').forEach((file) => {
       copyFileSync(join('assets', file), join('dist/assets', file));
-      console.log(`  copied assets/${file} → dist/assets/${file}`);
+      copyFileSync(join('assets', file), join('dist-firefox/assets', file));
+      console.log(`  copied assets/${file} → dist/assets & dist-firefox/assets`);
     });
   }
-}
 
-// ── Fix manifest paths (background service worker format) ────
-// The manifest references background/background.js which is correct for dist/
+  // Copy compiled JS files to dist-firefox too
+  ['background/background.js', 'content/content.js', 'popup/popup.js'].forEach((jsFile) => {
+    if (existsSync(`dist/${jsFile}`)) {
+      copyFileSync(`dist/${jsFile}`, `dist-firefox/${jsFile}`);
+    }
+  });
+}
 
 // ── Build ────────────────────────────────────────────────────
 async function build() {
-  console.log('\n🔨 Building CTIP Extension...\n');
+  console.log('\n🔨 Building CTIP Extension (Chrome & Firefox)...\n');
 
   for (const entry of entries) {
     await esbuild.build({
@@ -85,8 +117,11 @@ async function build() {
   }
 
   copyStatic();
-  console.log('\n✅ Build complete! Load dist/ folder in chrome://extensions\n');
+  console.log('\n✅ Build complete!');
+  console.log('👉 Chrome: Load "extension/dist" in chrome://extensions');
+  console.log('👉 Firefox: Load "extension/dist-firefox/manifest.json" in about:debugging\n');
 }
+
 
 if (isWatch) {
   // Watch mode: rebuild on changes

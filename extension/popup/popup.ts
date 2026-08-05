@@ -63,18 +63,57 @@ function renderDomain(domain: string, url: string): void {
 }
 
 // ── Render Neutral State (no analysis yet) ───────────────────
-function renderNeutral(): void {
+function renderNeutral(domain?: string, url?: string): void {
+  const canScan = url && (url.startsWith('http://') || url.startsWith('https://'));
+
   riskSection.innerHTML = `
     <div class="ctip-neutral">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2l7 4v5c0 5.25-3.5 9.74-7 11-3.5-1.26-7-5.75-7-11V6l7-4z"/>
       </svg>
-      <p class="ctip-neutral-text">Not yet analyzed</p>
-      <p class="ctip-neutral-hint">Visit a login page to trigger analysis</p>
+      <p class="ctip-neutral-text">Ready to scan</p>
+      <p class="ctip-neutral-hint">${canScan ? 'Click below to run real-time AI security audit' : 'Visit any website to analyze'}</p>
+      ${canScan ? `<button id="btn-scan-now" class="ctip-scan-btn">🛡️ Scan This Site</button>` : ''}
     </div>
   `;
-  lastAnalEl.textContent = 'No analysis available';
+  lastAnalEl.textContent = 'No analysis performed yet';
+
+  if (canScan) {
+    document.getElementById('btn-scan-now')?.addEventListener('click', () => {
+      triggerScan(domain || '', url);
+    });
+  }
 }
+
+function triggerScan(domain: string, url: string): void {
+  const scanBtn = document.getElementById('btn-scan-now') as HTMLButtonElement | null;
+  if (scanBtn) {
+    scanBtn.disabled = true;
+    scanBtn.textContent = 'Analyzing with AI...';
+  }
+
+  chrome.runtime.sendMessage(
+    {
+      type: 'CONTENT_DETECTED_LOGIN',
+      payload: {
+        url,
+        domain: domain || new URL(url).hostname,
+        title: '',
+        domSnapshot: '',
+        inputFieldCount: 0,
+        buttonLabels: [],
+        timestamp: new Date().toISOString()
+      }
+    },
+    () => {
+      // Re-query status
+      setTimeout(() => {
+        init();
+      }, 800);
+    }
+  );
+}
+
 
 // ── Render Risk Result ───────────────────────────────────────
 function renderRisk(result: AnalysisResult, cachedAt: string | null): void {
@@ -189,7 +228,7 @@ function init(): void {
       if (response.result) {
         renderRisk(response.result, response.cachedAt);
       } else {
-        renderNeutral();
+        renderNeutral(response.domain, response.url);
       }
     }
   );

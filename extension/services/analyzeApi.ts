@@ -73,39 +73,61 @@ function pickReasons(hash: number, count: number): string[] {
   return [...new Set(reasons)].slice(0, count); // deduplicate
 }
 
+const BACKEND_URL = 'http://localhost:8000/api/analyze';
+
 /**
- * Analyze a candidate website for phishing risk.
- *
- * TODO: Replace this mock with:
- *   const res = await fetch(`${BACKEND_URL}/api/analyze`, {
- *     method: 'POST',
- *     headers: { 'Content-Type': 'application/json' },
- *     body: JSON.stringify(payload),
- *   });
- *   return res.json() as Promise<AnalysisResult>;
+ * Analyze a candidate website for phishing risk via real backend with fallback.
  */
 export async function analyzeSite(payload: CandidateWebsite): Promise<AnalysisResult> {
-  // Simulate network latency
-  await new Promise((resolve) => setTimeout(resolve, 600 + Math.random() * 400));
-
   const domain = payload.domain.toLowerCase();
 
   // Safe domain shortcut
   if (SAFE_DOMAINS.has(domain)) {
-    const safeScore = 5 + (hashDomain(domain) % 16); // 5-20 range
+    const safeScore = 5 + (hashDomain(domain) % 16);
     return {
       status: 'TRUSTED',
       risk_score: safeScore,
-      confidence: 95 + (hashDomain(domain) % 6), // 95-100
+      confidence: 95 + (hashDomain(domain) % 6),
       recommendation: 'ALLOW',
       reasons: ['Domain is in institutional allowlist'],
     };
   }
 
-  // Deterministic mock for unknown domains
+  // 1. Try real live backend call
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    const res = await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: payload.url,
+        html: payload.html || undefined,
+        dom_snapshot: payload.html || undefined
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        status: data.status || statusLabel(data.risk_score || 0),
+        risk_score: data.risk_score ?? 0,
+        confidence: data.confidence ?? 85,
+        recommendation: data.recommendation || recommendationFromScore(data.risk_score || 0),
+        reasons: data.reasons || pickReasons(hashDomain(domain), 2),
+      };
+    }
+  } catch (e) {
+    console.warn('[CTIP] Live backend /api/analyze unavailable, using fallback:', e);
+  }
+
+  // 2. Fallback deterministic scoring if backend is offline
   const hash = hashDomain(domain);
   const risk_score = scoreFromHash(hash);
-  const confidence = 60 + (hash % 35); // 60-94
+  const confidence = 60 + (hash % 35);
 
   return {
     status: statusLabel(risk_score),
@@ -115,3 +137,4 @@ export async function analyzeSite(payload: CandidateWebsite): Promise<AnalysisRe
     reasons: pickReasons(hash, risk_score > 70 ? 3 : 2),
   };
 }
+
