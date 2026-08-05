@@ -58,12 +58,14 @@ def save_twin(domain: str, twin_dict: dict[str, Any]) -> str:
                 npy_path = _embedding_path(domain, kind)
                 np.save(str(npy_path), emb)
                 # Store as list in JSON for portability
-                twin_copy[embed_key] = [float(x) for x in emb.tolist()]
+                twin_copy[embed_key] = [float(x) for x in emb.flatten().tolist()]
             elif isinstance(emb, list):
                 kind = embed_key.replace("_embedding", "")
                 npy_path = _embedding_path(domain, kind)
-                np.save(str(npy_path), np.array(emb, dtype=np.float32))
-                # Already a list, keep as-is
+                arr = np.array(emb, dtype=np.float32)
+                np.save(str(npy_path), arr)
+                twin_copy[embed_key] = [float(x) for x in arr.flatten().tolist()]
+
 
     # Save JSON
     json_path = _twin_path(domain)
