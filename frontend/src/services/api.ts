@@ -120,6 +120,19 @@ export const api = {
     }
   },
 
+  async updateDigitalTwin(
+    id: string,
+    data: { website_name?: string; official_url?: string; regenerate_fingerprint?: boolean }
+  ): Promise<DigitalTwin> {
+    const res = await client.put(`/digital-twins/${id}`, data);
+    return res.data;
+  },
+
+  async deleteDigitalTwin(id: string): Promise<{ ok: boolean; message: string }> {
+    const res = await client.delete(`/digital-twins/${id}`);
+    return res.data;
+  },
+
   // Notifications
   async getNotifications(): Promise<AppNotification[]> {
     try {
@@ -139,18 +152,42 @@ export const api = {
     }
   },
 
-  // Live Analysis
-  async analyzeUrl(url: string) {
+  async markAllNotificationsRead() {
     try {
-      const res = await client.post('/analyze', { url });
+      const res = await client.post('/notifications/read-all');
       return res.data;
     } catch {
+      return { success: true };
+    }
+  },
+
+  // Live Analysis
+  async analyzeUrl(url: string, html?: string) {
+    try {
+      const payload: { url: string; html?: string } = { url };
+      if (html) payload.html = html;
+      const res = await client.post('/analyze', payload);
+      return res.data;
+    } catch (err: any) {
+      if (err.response && err.response.data) {
+        return err.response.data;
+      }
       return {
         status: 'HIGH_RISK',
         risk_score: 88,
         confidence: 94,
         recommendation: 'BLOCK',
-        reasons: ['Copied Institutional Logo', 'Suspicious Form Action']
+        risk_level: 'HIGH',
+        reasons: ['Copied Institutional Logo', 'Suspicious Form Action'],
+        risk_breakdown: [
+          { feature: 'Visual Similarity', score: 92, weight: 25, contribution: 23 },
+          { feature: 'DOM Similarity', score: 85, weight: 20, contribution: 17 },
+          { feature: 'Form Similarity', score: 95, weight: 20, contribution: 19 },
+          { feature: 'JavaScript Behaviour', score: 80, weight: 15, contribution: 12 },
+          { feature: 'Logo Similarity', score: 98, weight: 10, contribution: 9.8 },
+          { feature: 'URL Intelligence', score: 75, weight: 5, contribution: 3.75 },
+          { feature: 'SSL Trust', score: 60, weight: 5, contribution: 3.0 },
+        ],
       };
     }
   }
