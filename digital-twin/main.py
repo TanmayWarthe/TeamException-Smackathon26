@@ -32,7 +32,7 @@ _twin_store = _load("ts", _base / "storage" / "twin_store.py")
 
 def cmd_generate(args):
     """Generate a new Digital Twin."""
-    twin = _fingerprint.generate_fingerprint(
+    twin = _fingerprint.generate_fingerprint_sync(
         url=args.url,
         website_name=args.name or "",
     )
