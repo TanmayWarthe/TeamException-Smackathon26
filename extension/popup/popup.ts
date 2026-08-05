@@ -62,7 +62,18 @@ function renderDomain(domain: string, url: string): void {
   }
 }
 
-// ── Render Neutral State (no analysis yet) ───────────────────
+// ── Render Neutral / Scanning State ──────────────────────────
+function renderScanning(): void {
+  riskSection.innerHTML = `
+    <div class="ctip-neutral">
+      <div class="ctip-spinner"></div>
+      <p class="ctip-neutral-text" style="color:#22d3ee;font-weight:600;margin-top:12px;">Analyzing in Real-Time...</p>
+      <p class="ctip-neutral-hint">AI engine inspecting DOM, SSL & Institutional Twins</p>
+    </div>
+  `;
+  lastAnalEl.textContent = 'Auditing site...';
+}
+
 function renderNeutral(domain?: string, url?: string): void {
   const canScan = url && (url.startsWith('http://') || url.startsWith('https://'));
 
@@ -86,37 +97,32 @@ function renderNeutral(domain?: string, url?: string): void {
 }
 
 function triggerScan(domain: string, url: string): void {
-  const scanBtn = document.getElementById('btn-scan-now') as HTMLButtonElement | null;
-  if (scanBtn) {
-    scanBtn.disabled = true;
-    scanBtn.textContent = 'Analyzing with AI...';
-  }
+  renderScanning();
 
   chrome.runtime.sendMessage(
     {
       type: 'CONTENT_DETECTED_LOGIN',
       payload: {
         url,
-        domain: domain || new URL(url).hostname,
+        domain: domain || (url.startsWith('http') ? new URL(url).hostname : 'unknown'),
         title: '',
         domSnapshot: '',
         inputFieldCount: 0,
         buttonLabels: [],
+        logoSrc: null,
         timestamp: new Date().toISOString()
       }
     },
-    () => {
-      // Re-query status
+    (res) => {
       setTimeout(() => {
         init();
-      }, 800);
+      }, 500);
     }
   );
 }
 
-
 // ── Render Risk Result ───────────────────────────────────────
-function renderRisk(result: AnalysisResult, cachedAt: string | null): void {
+function renderRisk(result: AnalysisResult, cachedAt: string | null, domain?: string, url?: string): void {
   const level = getRiskLevel(result.risk_score);
   const theme = RISK_LEVELS[level];
 
@@ -126,7 +132,7 @@ function renderRisk(result: AnalysisResult, cachedAt: string | null): void {
   const progress = (result.risk_score / 100) * circumference;
   const dashoffset = circumference - progress;
 
-  const isCritical = level === 'CRITICAL';
+  const isCritical = level === 'CRITICAL' || level === 'HIGH';
 
   // Recommendation styling
   const recColors: Record<string, { bg: string; fg: string }> = {
@@ -161,12 +167,12 @@ function renderRisk(result: AnalysisResult, cachedAt: string | null): void {
     <!-- Risk Badge -->
     <div class="risk-badge" style="background:${theme.bg};border-color:${theme.border};color:${theme.fg}">
       <span class="risk-badge-dot" style="background:${theme.fg}"></span>
-      ${theme.label} · ${result.risk_score}%
+      ${theme.label} · ${result.risk_score}% Risk
     </div>
 
     <!-- Recommendation -->
     <div class="risk-recommendation" style="background:${rec.bg};color:${rec.fg}">
-      ${result.recommendation}
+      Action: ${result.recommendation}
     </div>
 
     <!-- Confidence Bar -->
@@ -182,6 +188,12 @@ function renderRisk(result: AnalysisResult, cachedAt: string | null): void {
 
     <!-- Reasons -->
     ${reasonsHtml ? `<ul class="risk-reasons">${reasonsHtml}</ul>` : ''}
+
+    <!-- Quick Action Buttons -->
+    <div style="display:flex;gap:8px;margin-top:14px;width:100%;">
+      <button id="btn-rescan" class="ctip-scan-btn" style="flex:1;font-size:11px;padding:6px 10px;justify-content:center;">🔄 Re-Scan</button>
+      <button id="btn-soc" class="ctip-scan-btn" style="flex:1;font-size:11px;padding:6px 10px;justify-content:center;background:#1e293b;border:1px solid #334155;">📊 SOC Portal</button>
+    </div>
   `;
 
   // Animate the circle progress
@@ -199,13 +211,23 @@ function renderRisk(result: AnalysisResult, cachedAt: string | null): void {
     }
   });
 
+  // Re-scan listener
+  document.getElementById('btn-rescan')?.addEventListener('click', () => {
+    triggerScan(domain || '', url || '');
+  });
+
+  // SOC portal link
+  document.getElementById('btn-soc')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'http://localhost:3000' });
+  });
+
   // Last analysis timestamp
   if (cachedAt) {
     const date = new Date(cachedAt);
     const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     lastAnalEl.textContent = `Last analysis: ${timeStr}`;
   } else {
-    lastAnalEl.textContent = 'Just analyzed';
+    lastAnalEl.textContent = 'Just analyzed in real-time';
   }
 }
 
@@ -214,11 +236,11 @@ function init(): void {
   chrome.runtime.sendMessage(
     { type: 'POPUP_REQUEST_STATUS' },
     (response: PopupStatusResponse) => {
-      if (chrome.runtime.lastError) {
+      if (chrome.runtime.lastError || !response) {
         renderStatus(false);
         renderDomain('—', '—');
         renderNeutral();
-        lastAnalEl.textContent = 'Could not reach background service';
+        lastAnalEl.textContent = 'CTIP Background Service active';
         return;
       }
 
@@ -226,7 +248,7 @@ function init(): void {
       renderDomain(response.domain, response.url);
 
       if (response.result) {
-        renderRisk(response.result, response.cachedAt);
+        renderRisk(response.result, response.cachedAt, response.domain, response.url);
       } else {
         renderNeutral(response.domain, response.url);
       }
