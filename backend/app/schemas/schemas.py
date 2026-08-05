@@ -23,7 +23,9 @@ class CandidateAnalyzeRequest(BaseModel):
     url: str
     domain: Optional[str] = None
     title: Optional[str] = None
-    domSnapshot: Optional[str] = None
+    html: Optional[str] = None          # Full page HTML submitted directly (preferred)
+    domSnapshot: Optional[str] = None   # CamelCase alias accepted from Chrome extension
+    dom_snapshot: Optional[str] = None  # Snake_case alias accepted from Chrome extension
     inputFieldCount: Optional[int] = 0
     buttonLabels: Optional[list[str]] = []
     logoSrc: Optional[str] = None
