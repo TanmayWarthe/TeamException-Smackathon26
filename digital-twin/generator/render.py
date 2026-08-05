@@ -115,8 +115,20 @@ async def render_page(url: str, screenshot_path: str | None = None) -> dict:
 
 
 def render_page_sync(url: str, screenshot_path: str | None = None) -> dict:
-    """Synchronous wrapper for render_page()."""
-    return asyncio.run(render_page(url, screenshot_path))
+    """Synchronous wrapper for render_page().
+    
+    Raises RuntimeError if called from within an existing event loop.
+    """
+    try:
+        asyncio.get_running_loop()
+        raise RuntimeError(
+            "render_page_sync() cannot be called from a running event loop. "
+            "Use 'await render_page(url, screenshot_path)' instead."
+        )
+    except RuntimeError as e:
+        if "cannot be called from a running event loop" in str(e):
+            raise
+        return asyncio.run(render_page(url, screenshot_path))
 
 
 # ── Standalone test ───────────────────────────────────────────

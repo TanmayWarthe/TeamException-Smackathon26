@@ -44,7 +44,10 @@ def _import_modules():
     return modules
 
 
+import asyncio
+
 _mods = _import_modules()
+render_page = _mods["render"].render_page
 render_page_sync = _mods["render"].render_page_sync
 extract_dom_fingerprint = _mods["dom_extractor"].extract_dom_fingerprint
 extract_logo = _mods["logo_extractor"].extract_logo
@@ -53,13 +56,13 @@ embedding_to_list = _mods["clip_embedder"].embedding_to_list
 save_twin = _mods["twin_store"].save_twin
 
 
-def generate_fingerprint(
+async def generate_fingerprint(
     url: str,
     website_name: str = "",
     fingerprint_version: int = 1,
 ) -> dict:
     """
-    Generate a complete Digital Twin fingerprint for an official website.
+    Generate a complete Digital Twin fingerprint for an official website (async).
 
     Args:
         url: The official URL to fingerprint (e.g. 'https://erp.ycce.edu.in')
@@ -72,7 +75,7 @@ def generate_fingerprint(
     print(f"[Fingerprint] Generating twin for: {url}")
 
     # Step 1: Render the page
-    render_result = render_page_sync(url)
+    render_result = await render_page(url)
     domain = render_result["domain"]
     if not website_name:
         website_name = render_result.get("title", domain)
@@ -125,6 +128,24 @@ def generate_fingerprint(
     print(f"[Fingerprint] Twin saved to: {save_path}")
 
     return twin
+
+
+def generate_fingerprint_sync(
+    url: str,
+    website_name: str = "",
+    fingerprint_version: int = 1,
+) -> dict:
+    """Synchronous wrapper for generate_fingerprint()."""
+    try:
+        asyncio.get_running_loop()
+        raise RuntimeError(
+            "generate_fingerprint_sync() cannot be called from a running event loop. "
+            "Use 'await generate_fingerprint(url, website_name, fingerprint_version)' instead."
+        )
+    except RuntimeError as e:
+        if "cannot be called from a running event loop" in str(e):
+            raise
+        return asyncio.run(generate_fingerprint(url, website_name, fingerprint_version))
 
 
 def _extract_dominant_colors(screenshot_path: str, k: int = 5) -> list[str]:
@@ -184,7 +205,7 @@ def _extract_dominant_colors(screenshot_path: str, k: int = 5) -> list[str]:
 if __name__ == "__main__":
     import json
 
-    twin = generate_fingerprint(
+    twin = generate_fingerprint_sync(
         url="https://github.com/login",
         website_name="GitHub Login",
     )
@@ -195,3 +216,4 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("Digital Twin Generated:")
     print(json.dumps(summary, indent=2, default=str))
+
