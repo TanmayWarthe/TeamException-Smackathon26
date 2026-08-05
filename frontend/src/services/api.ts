@@ -62,11 +62,15 @@ export const api = {
   },
 
 
-    // Threats
-async getThreats(): Promise<Threat[]> {
-  const res = await client.get('/threats');
-  return res.data;
-},
+  // Threats
+  async getThreats(): Promise<Threat[]> {
+    try {
+      const res = await client.get('/threats');
+      return res.data;
+    } catch {
+      return mockThreats;
+    }
+  },
 
 
 
