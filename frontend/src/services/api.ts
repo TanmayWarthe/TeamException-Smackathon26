@@ -24,7 +24,7 @@ const client = axios.create({
 });
 
 client.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('ctip_token') || localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -190,5 +190,11 @@ export const api = {
         ],
       };
     }
+  },
+
+  // Auth
+  async login(email: string, password: string) {
+    const res = await client.post('/auth/login', { email, password });
+    return res.data;
   }
 };

@@ -6,19 +6,26 @@ import ThreatDetails from '../pages/ThreatDetails'
 import DigitalTwins from '../pages/DigitalTwins'
 import Notifications from '../pages/Notifications'
 import DashboardLayout from '../layouts/DashboardLayout'
+import ProtectedRoute from '../components/ProtectedRoute'
 
 export const router = createBrowserRouter([
-  { path: '/', element: <Navigate to="/login" replace /> },
   { path: '/login', element: <Login /> },
   {
-    path: '/',
-    element: <DashboardLayout />,
+    element: <ProtectedRoute />,
     children: [
-      { path: 'dashboard', element: <Dashboard /> },
-      { path: 'threats', element: <Threats /> },
-      { path: 'threats/:id', element: <ThreatDetails /> },
-      { path: 'digital-twins', element: <DigitalTwins /> },
-      { path: 'notifications', element: <Notifications /> },
+      {
+        path: '/',
+        element: <DashboardLayout />,
+        children: [
+          { index: true, element: <Navigate to="/dashboard" replace /> },
+          { path: 'dashboard', element: <Dashboard /> },
+          { path: 'threats', element: <Threats /> },
+          { path: 'threats/:id', element: <ThreatDetails /> },
+          { path: 'digital-twins', element: <DigitalTwins /> },
+          { path: 'notifications', element: <Notifications /> },
+        ],
+      },
     ],
   },
+  { path: '*', element: <Navigate to="/login" replace /> },
 ])

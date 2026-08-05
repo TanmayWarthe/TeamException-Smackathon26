@@ -170,10 +170,17 @@ export default function DashboardLayout() {
               <div className="w-8 h-8 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-sm font-bold">
                 {user?.name?.[0] ?? 'A'}
               </div>
-              <div className="text-sm">
-                <p className="text-white font-medium leading-tight">{user?.name ?? 'SecOps Admin'}</p>
-                <p className="text-slate-500 text-xs leading-tight">{user?.role ?? 'SUPER_ADMIN'}</p>
+              <div className="text-sm hidden sm:block">
+                <p className="text-white font-medium leading-tight">{user?.name ?? 'SOC Administrator'}</p>
+                <p className="text-slate-500 text-xs leading-tight font-mono">{user?.email ?? 'admin@ycce.edu'}</p>
               </div>
+              <button
+                onClick={handleLogout}
+                className="ml-2 p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-950/40 border border-transparent hover:border-red-500/30 rounded-lg transition"
+                title="Sign Out of SOC Portal"
+              >
+                <LogOut size={16} />
+              </button>
             </div>
           </div>
         </header>
