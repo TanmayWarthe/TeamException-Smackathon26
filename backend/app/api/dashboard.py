@@ -8,6 +8,7 @@ from ..models.entities import Threat, DigitalTwinModel, ProtectionEvent
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("")
+@router.get("/stats")
 async def get_dashboard_overview(db: AsyncSession = Depends(get_db)):
     threats_res = await db.execute(select(Threat))
     threats = threats_res.scalars().all()

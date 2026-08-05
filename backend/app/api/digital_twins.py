@@ -1,16 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from urllib.parse import urlparse
+from datetime import datetime, timezone
 
 from ..database.session import get_db
 from ..models.entities import DigitalTwinModel
-from ..schemas.schemas import DigitalTwinResponse, CreateDigitalTwinRequest
+from ..schemas.schemas import (
+    DigitalTwinResponse,
+    CreateDigitalTwinRequest,
+    UpdateDigitalTwinRequest,
+)
 from ..services.ai_service import generate_twin_fingerprint
+from ..websocket.manager import ws_manager
 
 router = APIRouter(prefix="/digital-twins", tags=["digital-twins"])
-
-from datetime import datetime, timezone
 
 @router.get("", response_model=list[DigitalTwinResponse])
 async def list_digital_twins(db: AsyncSession = Depends(get_db)):
@@ -71,7 +75,7 @@ async def create_digital_twin(req: CreateDigitalTwinRequest, db: AsyncSession = 
         await db.commit()
         await db.refresh(twin)
         
-        return DigitalTwinResponse(
+        res = DigitalTwinResponse(
             id=twin.id,
             website_name=twin.website_name,
             official_url=twin.official_url,
@@ -80,6 +84,17 @@ async def create_digital_twin(req: CreateDigitalTwinRequest, db: AsyncSession = 
             created_at=twin.created_at.isoformat() if twin.created_at else now.isoformat(),
             updated_at=twin.updated_at.isoformat() if twin.updated_at else now.isoformat(),
         )
+
+        # Real-time WebSocket broadcast of Digital Twin registration
+        await ws_manager.broadcast_digital_twin({
+            "id": twin.id,
+            "website_name": twin.website_name,
+            "official_url": twin.official_url,
+            "fingerprint_version": twin.fingerprint_version,
+            "created_at": twin.created_at.isoformat() if twin.created_at else now.isoformat(),
+        })
+
+        return res
     except HTTPException:
         raise
     except Exception as e:
@@ -87,5 +102,93 @@ async def create_digital_twin(req: CreateDigitalTwinRequest, db: AsyncSession = 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to save digital twin to database: {str(e)}"
+        )
+
+
+@router.put("/{twin_id}", response_model=DigitalTwinResponse)
+@router.patch("/{twin_id}", response_model=DigitalTwinResponse)
+async def update_digital_twin(
+    twin_id: str,
+    req: UpdateDigitalTwinRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(DigitalTwinModel).where(DigitalTwinModel.id == twin_id))
+    twin = result.scalars().first()
+    if not twin:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Digital Twin not found")
+
+    now = datetime.now(timezone.utc)
+    url_changed = False
+    if req.official_url and req.official_url != twin.official_url:
+        twin.official_url = req.official_url
+        twin.domain = urlparse(req.official_url).hostname or req.official_url
+        url_changed = True
+
+    if req.website_name:
+        twin.website_name = req.website_name
+
+    # If URL changed or user explicitly asked to regenerate fingerprint
+    if url_changed or req.regenerate_fingerprint:
+        fp = await generate_twin_fingerprint(twin.official_url, twin.website_name)
+        if not fp.get("error"):
+            twin.fingerprint_version = (twin.fingerprint_version or 1) + 1
+            if fp.get("screenshot_path"):
+                twin.screenshot_path = fp.get("screenshot_path")
+
+    twin.updated_at = now
+    try:
+        await db.commit()
+        await db.refresh(twin)
+
+        res = DigitalTwinResponse(
+            id=twin.id,
+            website_name=twin.website_name,
+            official_url=twin.official_url,
+            fingerprint_version=twin.fingerprint_version,
+            screenshot_path=twin.screenshot_path or "/mock/screenshots/official_erp.png",
+            created_at=twin.created_at.isoformat() if twin.created_at else now.isoformat(),
+            updated_at=twin.updated_at.isoformat() if twin.updated_at else now.isoformat(),
+        )
+
+        await ws_manager.broadcast_digital_twin({
+            "id": twin.id,
+            "website_name": twin.website_name,
+            "official_url": twin.official_url,
+            "fingerprint_version": twin.fingerprint_version,
+            "created_at": twin.created_at.isoformat() if twin.created_at else now.isoformat(),
+            "updated_at": twin.updated_at.isoformat() if twin.updated_at else now.isoformat(),
+        })
+
+        return res
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update digital twin: {str(e)}"
+        )
+
+
+@router.delete("/{twin_id}")
+async def delete_digital_twin(twin_id: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(DigitalTwinModel).where(DigitalTwinModel.id == twin_id))
+    twin = result.scalars().first()
+    if not twin:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Digital Twin not found")
+
+    try:
+        await db.delete(twin)
+        await db.commit()
+
+        await ws_manager.broadcast({
+            "type": "DIGITAL_TWIN_DELETED",
+            "data": {"id": twin_id},
+        })
+
+        return {"ok": True, "message": "Digital Twin removed successfully"}
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete digital twin: {str(e)}"
         )
 

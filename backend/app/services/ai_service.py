@@ -196,7 +196,41 @@ def _evaluate_candidate_evidence(
       6. Consistent console logging
     """
     candidate_url = candidate_evidence.get("candidate_url", "")
-    candidate_domain = candidate_evidence.get("domain", "")
+    candidate_domain = candidate_evidence.get("domain", "").lower()
+
+    # ── 0. Institutional Allowlist & Official Domain Check ──────
+    INSTITUTIONAL_ROOTS = {"ycce.edu", "ycce.edu.in", "meghegroup.org", "nagpuruniversity.ac.in"}
+    is_official_institutional = (
+        candidate_domain in INSTITUTIONAL_ROOTS
+        or any(candidate_domain.endswith("." + root) for root in INSTITUTIONAL_ROOTS)
+    )
+    if is_official_institutional:
+        print(f"[AIService] '{candidate_domain}' is a verified official institutional domain.")
+        return {
+            "status": "TRUSTED",
+            "risk_score": 0,
+            "confidence": 99,
+            "recommendation": "ALLOW",
+            "reasons": [
+                f"Official verified campus domain ({candidate_domain})"
+            ],
+            "details": {
+                "fused_scores": {
+                    "visual": 0.0,
+                    "dom": 0.0,
+                    "form": 0.0,
+                    "url": 0.0,
+                    "ssl": 0.0,
+                    "logo": 0.0,
+                    "javascript": 0.0,
+                },
+                "component_contributions": {},
+                "red_flags": [],
+                "candidate_domain": candidate_domain,
+                "twin_domain": candidate_domain,
+                "no_twin": False,
+            },
+        }
 
     # ── 1. Load Digital Twin ──────────────────────────────────
     try:

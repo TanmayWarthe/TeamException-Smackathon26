@@ -8,6 +8,7 @@ from ..database.session import get_db
 from ..models.entities import Threat, Notification
 from ..schemas.schemas import CandidateAnalyzeRequest, AnalysisResponse
 from ..services.ai_service import run_ai_analysis_from_html, run_ai_analysis
+from ..websocket.manager import ws_manager
 
 router = APIRouter(tags=["analyze"])
 
@@ -16,6 +17,18 @@ router = APIRouter(tags=["analyze"])
 # are persisted to the threats table. Safe / Trusted / Low-risk pages (< 50) and UNKNOWN
 # results are evaluated in real time for extension protection but do NOT pollute the threats DB.
 MIN_THREAT_PERSIST_SCORE = 50
+
+
+def _get_risk_level(score: int) -> str:
+    if score <= 25:
+        return "TRUSTED"
+    if score <= 50:
+        return "LOW"
+    if score <= 70:
+        return "SUSPICIOUS"
+    if score <= 90:
+        return "HIGH"
+    return "CRITICAL"
 
 
 @router.post("/analyze", response_model=AnalysisResponse)
@@ -47,39 +60,48 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
         # URL path: fetch + render via Playwright (evidence-engine pipeline)
         result = await run_ai_analysis(candidate_url=candidate_url)
 
-    risk_score = result.get("risk_score", 0)
+    risk_score = int(result.get("risk_score", 0))
     status = result.get("status", "UNKNOWN")
     recommendation = result.get("recommendation", "ALLOW")
     reasons = result.get("reasons", [])
-    confidence = result.get("confidence", 0)
+    confidence = int(result.get("confidence", 0))
+    risk_level = _get_risk_level(risk_score)
+
+    details = result.get("details", {})
+    fused_scores = details.get("fused_scores", {})
+    twin_domain = details.get("twin_domain", "erp.ycce.edu.in")
+
+    # Build risk breakdown for rich explanation
+    risk_breakdown = []
+    for feature, weight, key in [
+        ("Visual Similarity", 25, "visual"),
+        ("DOM Similarity",    20, "dom"),
+        ("Form Similarity",   20, "form"),
+        ("JavaScript Behaviour", 15, "javascript"),
+        ("Logo Similarity",   10, "logo"),
+        ("URL Intelligence",   5, "url"),
+        ("SSL Trust",          5, "ssl"),
+    ]:
+        score = fused_scores.get(key, 50.0 if status != "TRUSTED" else 0.0)
+        risk_breakdown.append({
+            "feature": feature,
+            "score": round(float(score), 1),
+            "weight": weight,
+            "contribution": round(float(score) * weight / 100, 1),
+        })
+
+    matched_twin = {
+        "website_name": "Official Campus Portal",
+        "domain": twin_domain,
+        "official_url": f"https://{twin_domain}" if not twin_domain.startswith("http") else twin_domain,
+    }
 
     # ── Persist to active threats DB (only genuine risk results) ─
-    # UNKNOWN results (no twin registered) and safe/low-risk pages (< 50) are NOT persisted as threats.
-    is_unknown = result.get("details", {}).get("no_twin", False) or status == "UNKNOWN"
+    is_unknown = details.get("no_twin", False) or status == "UNKNOWN"
+    persisted_threat_id = None
+    now_utc = datetime.now(timezone.utc)
 
     if not is_unknown and risk_score >= MIN_THREAT_PERSIST_SCORE:
-        fused_scores = result.get("details", {}).get("fused_scores", {})
-
-        risk_breakdown = []
-        for feature, weight, key in [
-            ("Visual Similarity", 25, "visual"),
-            ("DOM Similarity",    20, "dom"),
-            ("Form Similarity",   20, "form"),
-            ("JavaScript Behaviour", 15, "javascript"),
-            ("Logo Similarity",   10, "logo"),
-            ("URL Intelligence",   5, "url"),
-            ("SSL Trust",          5, "ssl"),
-        ]:
-            score = fused_scores.get(key, 50)
-            risk_breakdown.append({
-                "feature": feature,
-                "score": round(float(score), 1),
-                "weight": weight,
-                "contribution": round(float(score) * weight / 100, 1),
-            })
-
-        now_utc = datetime.now(timezone.utc)
-
         # Upsert: check for existing ACTIVE threat for this domain
         existing_res = await db.execute(
             select(Threat).where(
@@ -92,14 +114,14 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
         if existing_threat:
             # Update existing active threat row in-place
             existing_threat.url = candidate_url
-            existing_threat.risk_score = int(risk_score)
-            existing_threat.confidence = int(confidence)
+            existing_threat.risk_score = risk_score
+            existing_threat.confidence = confidence
             existing_threat.recommendation = recommendation
             existing_threat.detected_at = now_utc
             existing_threat.similarity_report = fused_scores
             existing_threat.risk_breakdown = risk_breakdown
             existing_threat.explanation = {
-                "risk_score": int(risk_score),
+                "risk_score": risk_score,
                 "reasons": reasons,
                 "recommendation": recommendation,
             }
@@ -109,17 +131,36 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
             }
             new_timeline_entry = {
                 "time": now_utc.strftime("%I:%M %p"),
-                "label": f"Re-analyzed: Risk Score {int(risk_score)}%"
+                "label": f"Re-analyzed: Risk Score {risk_score}%"
             }
             existing_threat.timeline = (existing_threat.timeline or []) + [new_timeline_entry]
+            persisted_threat_id = existing_threat.id
+
+            await db.commit()
+
+            # Real-time WebSocket Broadcast: Threat Updated
+            await ws_manager.broadcast_threat_detected({
+                "id": existing_threat.id,
+                "url": candidate_url,
+                "domain": domain,
+                "targeted_portal": existing_threat.targeted_portal,
+                "risk_score": risk_score,
+                "confidence": confidence,
+                "threat_status": "ACTIVE",
+                "recommendation": recommendation,
+                "detected_at": now_utc.isoformat(),
+                "screenshot_path": existing_threat.screenshot_path or "",
+                "reasons": reasons,
+                "is_update": True,
+            })
         else:
             # Insert brand new threat row
             new_threat = Threat(
                 url=candidate_url,
                 domain=domain,
                 targeted_portal="ERP",
-                risk_score=int(risk_score),
-                confidence=int(confidence),
+                risk_score=risk_score,
+                confidence=confidence,
                 threat_status="ACTIVE",
                 recommendation=recommendation,
                 screenshot_path=None,
@@ -127,7 +168,7 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
                 similarity_report=fused_scores,
                 risk_breakdown=risk_breakdown,
                 explanation={
-                    "risk_score": int(risk_score),
+                    "risk_score": risk_score,
                     "reasons": reasons,
                     "recommendation": recommendation,
                 },
@@ -137,7 +178,7 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
                 },
                 timeline=[
                     {"time": now_utc.strftime("%I:%M %p"), "label": "Domain Analyzed"},
-                    {"time": now_utc.strftime("%I:%M %p"), "label": f"Risk Score: {int(risk_score)}%"},
+                    {"time": now_utc.strftime("%I:%M %p"), "label": f"Risk Score: {risk_score}%"},
                 ],
             )
             db.add(new_threat)
@@ -146,18 +187,53 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
             notif_severity = "Critical" if risk_score >= 90 else ("High Risk" if risk_score >= 70 else "Suspicious")
             notif = Notification(
                 title=f"{notif_severity} Threat Detected",
-                message=f"{domain} scored {int(risk_score)}% risk. Immediate review recommended.",
+                message=f"{domain} scored {risk_score}% risk. Immediate review recommended.",
                 read_status=False,
                 threat_id=new_threat.id,
             )
             db.add(notif)
+            persisted_threat_id = new_threat.id
 
-        await db.commit()
+            await db.commit()
+
+            # Real-time WebSocket Broadcast: New Threat Detected
+            await ws_manager.broadcast_threat_detected({
+                "id": new_threat.id,
+                "url": candidate_url,
+                "domain": domain,
+                "targeted_portal": "ERP",
+                "risk_score": risk_score,
+                "confidence": confidence,
+                "threat_status": "ACTIVE",
+                "recommendation": recommendation,
+                "detected_at": now_utc.isoformat(),
+                "screenshot_path": "",
+                "reasons": reasons,
+                "is_update": False,
+            })
+
+            # Real-time WebSocket Broadcast: Notification
+            await ws_manager.broadcast_notification({
+                "id": notif.id,
+                "title": notif.title,
+                "message": notif.message,
+                "read_status": False,
+                "created_at": now_utc.isoformat(),
+                "threat_id": new_threat.id,
+            })
 
     return AnalysisResponse(
         status=status,
-        risk_score=int(risk_score),
-        confidence=int(confidence),
+        risk_score=risk_score,
+        confidence=confidence,
         recommendation=recommendation,
         reasons=reasons,
+        risk_level=risk_level,
+        risk_breakdown=risk_breakdown,
+        similarity_report=fused_scores,
+        matched_twin=matched_twin,
+        threat_id=persisted_threat_id,
+        domain=domain,
+        url=candidate_url,
+        analyzed_at=now_utc.isoformat(),
     )

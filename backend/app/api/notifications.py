@@ -6,6 +6,8 @@ from ..database.session import get_db
 from ..models.entities import Notification
 from ..schemas.schemas import NotificationResponse
 
+from ..websocket.manager import ws_manager
+
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 @router.get("", response_model=list[NotificationResponse])
@@ -34,4 +36,25 @@ async def mark_notification_read(id: str, db: AsyncSession = Depends(get_db)):
         
     n.read_status = True
     await db.commit()
+
+    await ws_manager.broadcast({
+        "type": "NOTIFICATIONS_UPDATED",
+        "data": {"notification_id": id, "read_status": True},
+    })
+
     return {"message": "Notification marked as read", "id": id}
+
+@router.post("/read-all")
+async def mark_all_notifications_read(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Notification).where(Notification.read_status == False))
+    notifs = result.scalars().all()
+    for n in notifs:
+        n.read_status = True
+    await db.commit()
+
+    await ws_manager.broadcast({
+        "type": "NOTIFICATIONS_UPDATED",
+        "data": {"all_read": True},
+    })
+
+    return {"message": "All notifications marked as read", "count": len(notifs)}

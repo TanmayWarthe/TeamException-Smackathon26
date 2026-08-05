@@ -6,6 +6,8 @@ from ..database.session import get_db
 from ..models.entities import ProtectionEvent
 from ..schemas.schemas import ProtectionEventCreate
 
+from ..websocket.manager import ws_manager
+
 router = APIRouter(prefix="/events", tags=["events"])
 
 @router.get("")
@@ -40,4 +42,15 @@ async def log_event(event: ProtectionEventCreate, db: AsyncSession = Depends(get
     )
     db.add(pe)
     await db.commit()
+
+    # Real-time WebSocket broadcast of protection telemetry
+    await ws_manager.broadcast_telemetry_event({
+        "id": pe.id,
+        "event_type": pe.event_type,
+        "domain": pe.domain,
+        "browser": pe.browser,
+        "details": pe.details,
+        "created_at": pe.created_at.isoformat() if hasattr(pe, "created_at") and pe.created_at else None,
+    })
+
     return {"status": "success", "id": pe.id}

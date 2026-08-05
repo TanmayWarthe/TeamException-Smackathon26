@@ -6,6 +6,8 @@ from ..database.session import get_db
 from ..models.entities import Threat
 from ..schemas.schemas import ThreatListItem, ThreatDetailResponse, UpdateThreatStatusRequest
 
+from ..websocket.manager import ws_manager
+
 router = APIRouter(prefix="/threats", tags=["threats"])
 
 @router.get("", response_model=list[ThreatListItem])
@@ -108,4 +110,8 @@ async def update_threat_status(id: str, req: UpdateThreatStatusRequest, db: Asyn
         t.admin_notes = req.notes
         
     await db.commit()
+
+    # Real-time WebSocket broadcast of status change
+    await ws_manager.broadcast_threat_status(id, req.status, req.notes)
+
     return {"message": "Threat status updated successfully", "id": id, "status": req.status}

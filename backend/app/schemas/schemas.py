@@ -37,6 +37,14 @@ class AnalysisResponse(BaseModel):
     confidence: int
     recommendation: str
     reasons: list[str]
+    risk_level: Optional[str] = None
+    risk_breakdown: Optional[list[dict[str, Any]]] = None
+    similarity_report: Optional[dict[str, Any]] = None
+    matched_twin: Optional[dict[str, Any]] = None
+    threat_id: Optional[str] = None
+    domain: Optional[str] = None
+    url: Optional[str] = None
+    analyzed_at: Optional[str] = None
 
 # ── Threats ────────────────────────────────────────────────────
 class ThreatListItem(BaseModel):
@@ -88,6 +96,11 @@ class DigitalTwinResponse(BaseModel):
 class CreateDigitalTwinRequest(BaseModel):
     website_name: str
     official_url: str
+
+class UpdateDigitalTwinRequest(BaseModel):
+    website_name: Optional[str] = None
+    official_url: Optional[str] = None
+    regenerate_fingerprint: Optional[bool] = False
 
 # ── Notifications ──────────────────────────────────────────────
 class NotificationResponse(BaseModel):

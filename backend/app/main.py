@@ -15,27 +15,9 @@ from .api.threats import router as threats_router
 from .api.digital_twins import router as digital_twins_router
 from .api.notifications import router as notifications_router
 from .api.events import router as events_router
+from .websocket.manager import ws_manager, ConnectionManager
 
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: list[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
-    def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-
-    async def broadcast(self, message: dict):
-        for connection in self.active_connections:
-            try:
-                await connection.send_json(message)
-            except Exception:
-                pass
-
-manager = ConnectionManager()
+manager = ws_manager
 
 async def seed_initial_data():
     async with AsyncSessionLocal() as session:
@@ -183,12 +165,15 @@ app.add_middleware(
 # WebSocket for real-time threat broadcasts
 @app.websocket("/ws/alerts")
 async def websocket_alerts(websocket: WebSocket):
-    await manager.connect(websocket)
+    await ws_manager.connect(websocket)
     try:
         while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
+            data = await websocket.receive_text()
+            # Handle heartbeat ping/pong or client subscriptions
+            if data == "ping" or data == '{"type":"ping"}':
+                await ws_manager.send_personal_message({"type": "pong"}, websocket)
+    except (WebSocketDisconnect, Exception):
+        ws_manager.disconnect(websocket)
 
 # Routers
 app.include_router(auth_router, prefix=settings.API_V1_STR)
