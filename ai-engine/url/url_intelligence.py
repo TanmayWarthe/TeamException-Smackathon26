@@ -96,10 +96,27 @@ def compute_url_intelligence(
 
     # ── 6. Official domain name embedded as subdomain ────────
     # e.g., "ycce-login.evil.com" contains "ycce"
-    twin_base = clean_twin.split(".")[0]  # e.g., "erp" from "erp.ycce.edu.in"
+    #
+    # Rules:
+    #   a) Skip generic tokens that are common TLDs / country codes — these
+    #      appear in almost every domain and produce false positives.
+    #   b) Require the token to appear as a full word-boundary segment in the
+    #      candidate (split on dots and hyphens), not just as a bare substring.
+    #      This prevents "erp" from matching inside "herpes.com", etc.
+    _GENERIC_TOKENS = {
+        "com", "org", "net", "edu", "gov", "int", "mil",
+        "in", "co", "uk", "us", "au", "de", "fr", "io",
+        "www", "http", "https",
+    }
     twin_parts = clean_twin.replace(".", " ").split()
+    # Split candidate on dots and hyphens to get real word segments
+    cand_segments = set(re.split(r"[.\-]", clean_cand))
     for part in twin_parts:
-        if len(part) >= 3 and part in clean_cand and clean_cand != clean_twin:
+        if part in _GENERIC_TOKENS:
+            continue  # Never flag generic TLD/CC tokens as brand names
+        if len(part) < 3:
+            continue  # Too short — too many false positives
+        if part in cand_segments and clean_cand != clean_twin:
             penalties += 15
             red_flags.append(f"Official brand name '{part}' embedded in suspicious domain")
             break
