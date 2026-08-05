@@ -10,16 +10,24 @@ import { isLoginPage, collectFormMetadata } from '../utils/domHelpers';
 let warningBannerInjected = false;
 
 // ── Main Detection ───────────────────────────────────────────
-function detectAndReport(): void {
-  if (!isLoginPage()) return;
+let reported = false;
 
+function detectAndReport(): void {
+  // Only run on standard web pages
+  if (!window.location.protocol.startsWith('http')) return;
+
+  const isLogin = isLoginPage();
   const meta = collectFormMetadata();
+
+  // If already reported and no new login form appeared, skip
+  if (reported && !isLogin) return;
+  reported = true;
 
   const payload: CandidateWebsite = {
     url: window.location.href,
     domain: window.location.hostname,
-    title: document.title,
-    domSnapshot: meta.domSnapshot,
+    title: document.title || window.location.hostname,
+    domSnapshot: meta.domSnapshot || (document.documentElement ? document.documentElement.outerHTML.slice(0, 40000) : ''),
     inputFieldCount: meta.inputFieldCount,
     buttonLabels: meta.buttonLabels,
     logoSrc: meta.logoSrc,
@@ -27,15 +35,24 @@ function detectAndReport(): void {
   };
 
   // Send to background worker for analysis
-  chrome.runtime.sendMessage(
-    { type: 'CONTENT_DETECTED_LOGIN', payload } as ExtensionMessage,
-    (response) => {
-      if (chrome.runtime.lastError) {
-        console.debug('[CTIP] Could not reach background:', chrome.runtime.lastError.message);
+  try {
+    chrome.runtime.sendMessage(
+      { type: 'CONTENT_DETECTED_LOGIN', payload } as ExtensionMessage,
+      (response) => {
+        if (chrome.runtime.lastError) {
+          // Worker might be waking up
+          console.debug('[CTIP] Worker status:', chrome.runtime.lastError.message);
+        }
       }
-    }
-  );
+    );
+  } catch (err) {
+    console.debug('[CTIP] Failed to send to background:', err);
+  }
 }
+
+// Check on load + check again after 800ms for dynamic SPAs (React/Vue)
+setTimeout(detectAndReport, 300);
+setTimeout(detectAndReport, 1200);
 
 // ── Warning Banner Injection ─────────────────────────────────
 function injectWarningBanner(result: AnalysisResult): void {
