@@ -60,12 +60,12 @@ async def render_page(url: str, screenshot_path: str | None = None) -> dict:
         )
         page: Page = await context.new_page()
 
+        # Try domcontentloaded first (fast & reliable, avoids networkidle timeout on streaming sites like GitHub)
         try:
-            await page.goto(url, wait_until="networkidle", timeout=BROWSER_TIMEOUT_MS)
+            await page.goto(url, wait_until="domcontentloaded", timeout=12000)
         except Exception:
-            # Fallback: some pages never reach networkidle
             try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=BROWSER_TIMEOUT_MS)
+                await page.goto(url, wait_until="commit", timeout=10000)
             except Exception as e:
                 await browser.close()
                 raise RuntimeError(f"Failed to load {url}: {e}")
