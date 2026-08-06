@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Globe, Shield, Clock, AlertTriangle, CheckCircle2, Ban, Loader2, Server, Lock } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Globe, Shield, Clock, AlertTriangle, CheckCircle2, Ban, Loader2, Server, Lock, Trash2 } from 'lucide-react'
 import { api } from '../services/api'
 import RiskBadge from '../components/RiskBadge'
 import { useRealtime } from '../context/RealtimeContext'
 
 export default function ThreatDetails() {
   const { id } = useParams()
-  const { updateThreatStatusLocally } = useRealtime()
+  const navigate = useNavigate()
+  const { updateThreatStatusLocally, deleteThreat } = useRealtime()
   const [threat, setThreat] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [statusUpdating, setStatusUpdating] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [adminNotes, setAdminNotes] = useState('')
   const [notesSaving, setNotesSaving] = useState(false)
   const [notesMessage, setNotesMessage] = useState<string | null>(null)
@@ -40,6 +42,20 @@ export default function ThreatDetails() {
       console.error('Failed to update threat status:', err)
     } finally {
       setStatusUpdating(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!id || !threat) return
+    if (window.confirm(`Are you sure you want to permanently delete the threat record for "${threat.domain}"?`)) {
+      setDeleting(true)
+      try {
+        await deleteThreat(id)
+        navigate('/threats')
+      } catch (err) {
+        console.error('Failed to delete threat:', err)
+        setDeleting(false)
+      }
     }
   }
 
@@ -90,12 +106,12 @@ export default function ThreatDetails() {
           <ArrowLeft size={16} /> Back to Threats
         </Link>
 
-        {/* Status Action Buttons */}
+        {/* Status & Delete Action Buttons */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleStatusChange('BLOCKED')}
-            disabled={statusUpdating || threat.threat_status === 'BLOCKED'}
-            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition ${
+            disabled={statusUpdating || deleting || threat.threat_status === 'BLOCKED'}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition cursor-pointer ${
               threat.threat_status === 'BLOCKED'
                 ? 'bg-red-50 text-red-700 border border-red-200'
                 : 'bg-white hover:bg-red-50 text-slate-700 hover:text-red-700 border border-slate-200 shadow-xs'
@@ -105,14 +121,22 @@ export default function ThreatDetails() {
           </button>
           <button
             onClick={() => handleStatusChange('RESOLVED')}
-            disabled={statusUpdating || threat.threat_status === 'RESOLVED'}
-            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition ${
+            disabled={statusUpdating || deleting || threat.threat_status === 'RESOLVED'}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition cursor-pointer ${
               threat.threat_status === 'RESOLVED'
                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                 : 'bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 shadow-xs'
             }`}
           >
             <CheckCircle2 size={14} /> Mark Resolved
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={statusUpdating || deleting}
+            title="Delete this threat record"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition bg-white hover:bg-red-50 text-slate-700 hover:text-red-700 border border-slate-200 shadow-xs cursor-pointer"
+          >
+            <Trash2 size={14} className="text-red-500" /> {deleting ? 'Deleting...' : 'Delete'}
           </button>
         </div>
       </div>
@@ -158,25 +182,36 @@ export default function ThreatDetails() {
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
           <p className="text-slate-400 text-xs uppercase font-semibold">Targeted Portal</p>
           <p className="text-slate-900 font-bold text-base mt-1 flex items-center gap-2">
-            <Shield size={16} className="text-blue-600" /> {threat.targeted_portal || 'YCCE ERP Portal'}
+            <Shield size={16} className="text-blue-600" /> {threat.targeted_portal || threat.matched_twin?.website_name || 'Protected Campus Portal'}
           </p>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
           <p className="text-slate-400 text-xs uppercase font-semibold">Origin IP Address</p>
           <p className="text-slate-900 font-semibold text-sm mt-1 flex items-center gap-2">
-            <Server size={16} className="text-slate-400" /> {threat.ip_address || '185.220.101.4'}
+            <Server size={16} className="text-slate-400" /> {threat.ip_address || 'Not available'}
           </p>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
           <p className="text-slate-400 text-xs uppercase font-semibold">Domain Registrar</p>
           <p className="text-slate-900 font-semibold text-sm mt-1 truncate">
-            {threat.registrar || 'NameCheap Inc.'}
+            {threat.registrar || 'Not available'}
           </p>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
           <p className="text-slate-400 text-xs uppercase font-semibold">SSL Certificate</p>
-          <p className="text-emerald-700 font-semibold text-sm mt-1 flex items-center gap-1.5">
-            <Lock size={14} /> {threat.ssl_status || 'Valid (Let\'s Encrypt)'}
+          <p className={`font-semibold text-sm mt-1 flex items-center gap-1.5 ${
+            (threat.ssl_status || '').startsWith('Valid')
+              ? 'text-emerald-700'
+              : (threat.ssl_status || '').includes('No SSL')
+              ? 'text-amber-700'
+              : 'text-slate-600'
+          }`}>
+            {(threat.ssl_status || '').startsWith('Valid') ? (
+              <Lock size={14} />
+            ) : (
+              <AlertTriangle size={14} className="text-amber-500" />
+            )}
+            {threat.ssl_status || 'Not available'}
           </p>
         </div>
       </div>
@@ -206,11 +241,11 @@ export default function ThreatDetails() {
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 h-52 flex flex-col justify-between">
             <div className="space-y-1 text-xs">
-              <p className="text-slate-600">Baseline Domain: <strong className="text-emerald-700">{threat.matched_twin?.domain || 'erp.ycce.edu.in'}</strong></p>
-              <p className="text-slate-600">Fingerprint Status: <strong className="text-slate-900">Verified Hash Fingerprint</strong></p>
+              <p className="text-slate-600">Baseline Domain: <strong className="text-emerald-700">{threat.matched_twin?.domain || (threat.targeted_portal ? `${threat.targeted_portal.toLowerCase().replace(/\s+/g, '')}.ycce.edu.in` : 'Official Baseline Domain')}</strong></p>
+              <p className="text-slate-600">Baseline Name: <strong className="text-slate-900">{threat.matched_twin?.website_name || threat.targeted_portal || 'Official Institutional Twin'}</strong></p>
             </div>
             <div className="bg-white rounded-lg p-3 border border-slate-200 text-[11px] text-slate-600">
-              Screenshot Baseline: {threat.official_screenshot_path || 'evidence/official_erp.png'}
+              Screenshot Baseline: {threat.official_screenshot_path || (threat.matched_twin?.domain ? `evidence/${threat.matched_twin.domain}_baseline.png` : 'evidence/baseline.png')}
             </div>
           </div>
         </div>
