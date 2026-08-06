@@ -11,6 +11,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 try:
+    # pyrefly: ignore [missing-import]
     from playwright.async_api import async_playwright, Page, Browser
     HAS_PLAYWRIGHT = True
 except ImportError:
@@ -30,7 +31,11 @@ async def render_page(url: str, screenshot_path: str | None = None) -> dict:
     Render a URL with Playwright (or requests fallback if Playwright is absent),
     capture screenshot and HTML.
     """
-    domain = urlparse(url).hostname or "unknown"
+    url = (url or "").strip()
+    if url and not url.startswith(("http://", "https://")):
+        url = f"https://{url}"
+
+    domain = urlparse(url).hostname or url.replace("https://", "").replace("http://", "").split("/")[0] or "unknown"
 
     if screenshot_path is None:
         screenshot_path = str(SCREENSHOTS_DIR / f"{sanitize_domain(domain)}.png")
