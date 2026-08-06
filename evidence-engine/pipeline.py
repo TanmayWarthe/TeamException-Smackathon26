@@ -62,7 +62,11 @@ async def extract_evidence(url: str) -> dict[str, Any]:
             - render_failed (bool)
             - render_error (str | None)
     """
-    domain = urlparse(url).hostname or "unknown"
+    url = (url or "").strip()
+    if url and not url.startswith(("http://", "https://")):
+        url = f"https://{url}"
+
+    domain = urlparse(url).hostname or url.replace("https://", "").replace("http://", "").split("/")[0] or "unknown"
     safe_name = sanitize_domain(domain)
 
     print(f"[Evidence] Processing candidate: {url}")
