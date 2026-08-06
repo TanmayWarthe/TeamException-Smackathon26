@@ -43,12 +43,20 @@ export default function Dashboard() {
 
   const handleInspectSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inspectUrl.trim()) return
+    let target = inspectUrl.trim()
+    if (!target) return
+
+    // Auto-prepend https:// if scheme is missing
+    if (!/^https?:\/\//i.test(target)) {
+      target = `https://${target}`
+      setInspectUrl(target)
+    }
+
     setAnalyzing(true)
     setInspectError(null)
     setAnalysisResult(null)
     try {
-      const result = await api.analyzeUrl(inspectUrl.trim())
+      const result = await api.analyzeUrl(target)
       setAnalysisResult(result)
     } catch (err: any) {
       setInspectError(err?.message || 'Failed to analyze URL')
@@ -141,7 +149,13 @@ export default function Dashboard() {
               type="text"
               value={inspectUrl}
               onChange={(e) => setInspectUrl(e.target.value)}
-              placeholder="https://suspicious-domain.xyz/login"
+              onBlur={() => {
+                const trimmed = inspectUrl.trim()
+                if (trimmed && !/^https?:\/\//i.test(trimmed)) {
+                  setInspectUrl(`https://${trimmed}`)
+                }
+              }}
+              placeholder="https://jupyter.org or https://suspicious-domain.xyz"
               className="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
               disabled={analyzing}
             />
