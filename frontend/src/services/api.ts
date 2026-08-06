@@ -61,6 +61,16 @@ export const api = {
     return res.data;
   },
 
+  async deleteThreat(id: string): Promise<{ message: string; id: string }> {
+    const res = await client.delete(`/threats/${id}`);
+    return res.data;
+  },
+
+  async clearAllThreats(): Promise<{ message: string }> {
+    const res = await client.delete('/threats');
+    return res.data;
+  },
+
   // Digital Twins
   async getDigitalTwins(): Promise<DigitalTwin[]> {
     const res = await client.get('/digital-twins');
@@ -98,6 +108,16 @@ export const api = {
 
   async markAllNotificationsRead() {
     const res = await client.post('/notifications/read-all');
+    return res.data;
+  },
+
+  async deleteNotification(id: string): Promise<{ message: string; id: string }> {
+    const res = await client.delete(`/notifications/${id}`);
+    return res.data;
+  },
+
+  async clearAllNotifications(): Promise<{ message: string }> {
+    const res = await client.delete('/notifications');
     return res.data;
   },
 
