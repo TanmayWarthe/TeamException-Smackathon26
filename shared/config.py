@@ -69,5 +69,5 @@ BROWSER_TIMEOUT_MS = 30_000
 
 # ── Domain sanitization for filenames ─────────────────────────
 def sanitize_domain(domain: str) -> str:
-    """Convert a domain like 'erp.ycce.edu.in' to 'erp_ycce_edu_in'."""
+    """Convert a domain like 'ycce.edu' to 'ycce_edu'."""
     return domain.replace(".", "_").replace("/", "_").replace(":", "_")
