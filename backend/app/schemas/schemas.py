@@ -78,6 +78,7 @@ class ThreatDetailResponse(BaseModel):
     evidence: dict[str, Any]
     timeline: list[dict[str, Any]]
     admin_notes: str
+    matched_twin: Optional[dict[str, Any]] = None
 
 class UpdateThreatStatusRequest(BaseModel):
     status: str # ACTIVE, BLOCKED, RESOLVED, IGNORED
