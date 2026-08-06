@@ -5,9 +5,10 @@ from urllib.parse import urlparse
 from datetime import datetime, timezone
 
 from ..database.session import get_db
-from ..models.entities import Threat, Notification
+from ..models.entities import Threat, Notification, DigitalTwinModel
 from ..schemas.schemas import CandidateAnalyzeRequest, AnalysisResponse
 from ..services.ai_service import run_ai_analysis_from_html, run_ai_analysis
+from ..services.infra_service import resolve_domain_infrastructure
 from ..websocket.manager import ws_manager
 
 router = APIRouter(tags=["analyze"])
@@ -43,8 +44,10 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
 
     If no HTML is provided, falls back to fetching the URL via Playwright.
     """
-    candidate_url = req.url
-    domain = req.domain or urlparse(candidate_url).hostname or candidate_url
+    candidate_url = (req.url or "").strip()
+    if candidate_url and not candidate_url.startswith(("http://", "https://")):
+        candidate_url = f"https://{candidate_url}"
+    domain = req.domain or urlparse(candidate_url).hostname or candidate_url.replace("https://", "").replace("http://", "").split("/")[0]
 
     # Resolve submitted HTML — prefer explicit `html`, fall back to `domSnapshot`/`dom_snapshot`
     submitted_html = req.html or req.domSnapshot or req.dom_snapshot
@@ -90,10 +93,23 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
             "contribution": round(float(score) * weight / 100, 1),
         })
 
+    # Look up digital twin from DB for accurate portal metadata
+    twin_db_res = await db.execute(
+        select(DigitalTwinModel).where(
+            (DigitalTwinModel.domain == twin_domain) |
+            (DigitalTwinModel.official_url.like(f"%{twin_domain}%"))
+        )
+    )
+    twin_record = twin_db_res.scalars().first()
+    portal_name = twin_record.website_name if twin_record else (
+        "YCCE ERP Portal" if "erp" in twin_domain else f"Campus {twin_domain}"
+    )
+    official_screenshot = twin_record.screenshot_path if twin_record else ""
+
     matched_twin = {
-        "website_name": "Official Campus Portal",
+        "website_name": portal_name,
         "domain": twin_domain,
-        "official_url": f"https://{twin_domain}" if not twin_domain.startswith("http") else twin_domain,
+        "official_url": twin_record.official_url if twin_record else (f"https://{twin_domain}" if not twin_domain.startswith("http") else twin_domain),
     }
 
     # ── Persist to active threats DB (only genuine risk results) ─
@@ -102,6 +118,8 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
     now_utc = datetime.now(timezone.utc)
 
     if not is_unknown and risk_score >= MIN_THREAT_PERSIST_SCORE:
+        infra = resolve_domain_infrastructure(candidate_url, domain)
+
         # Upsert: check for existing ACTIVE threat for this domain
         existing_res = await db.execute(
             select(Threat).where(
@@ -120,6 +138,11 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
             existing_threat.detected_at = now_utc
             existing_threat.similarity_report = fused_scores
             existing_threat.risk_breakdown = risk_breakdown
+            existing_threat.ip_address = infra["ip_address"]
+            existing_threat.registrar = infra["registrar"]
+            existing_threat.ssl_status = infra["ssl_status"]
+            if not existing_threat.official_screenshot_path and official_screenshot:
+                existing_threat.official_screenshot_path = official_screenshot
             existing_threat.explanation = {
                 "risk_score": risk_score,
                 "reasons": reasons,
@@ -150,6 +173,9 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
                 "recommendation": recommendation,
                 "detected_at": now_utc.isoformat(),
                 "screenshot_path": existing_threat.screenshot_path or "",
+                "ip_address": infra["ip_address"],
+                "registrar": infra["registrar"],
+                "ssl_status": infra["ssl_status"],
                 "reasons": reasons,
                 "is_update": True,
             })
@@ -158,13 +184,16 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
             new_threat = Threat(
                 url=candidate_url,
                 domain=domain,
-                targeted_portal="ERP",
+                targeted_portal=portal_name,
                 risk_score=risk_score,
                 confidence=confidence,
                 threat_status="ACTIVE",
                 recommendation=recommendation,
                 screenshot_path=None,
-                official_screenshot_path=None,
+                official_screenshot_path=official_screenshot,
+                ip_address=infra["ip_address"],
+                registrar=infra["registrar"],
+                ssl_status=infra["ssl_status"],
                 similarity_report=fused_scores,
                 risk_breakdown=risk_breakdown,
                 explanation={
@@ -187,7 +216,7 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
             notif_severity = "Critical" if risk_score >= 90 else ("High Risk" if risk_score >= 70 else "Suspicious")
             notif = Notification(
                 title=f"{notif_severity} Threat Detected",
-                message=f"{domain} scored {risk_score}% risk. Immediate review recommended.",
+                message=f"{domain} scored {risk_score}% risk targeting {portal_name}. Immediate review recommended.",
                 read_status=False,
                 threat_id=new_threat.id,
             )
@@ -201,7 +230,7 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
                 "id": new_threat.id,
                 "url": candidate_url,
                 "domain": domain,
-                "targeted_portal": "ERP",
+                "targeted_portal": portal_name,
                 "risk_score": risk_score,
                 "confidence": confidence,
                 "threat_status": "ACTIVE",
