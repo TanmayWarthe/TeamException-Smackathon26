@@ -105,3 +105,31 @@ export function collectFormMetadata(): {
 
   return { inputFieldCount, buttonLabels, domSnapshot, logoSrc, hasPasswordField };
 }
+
+/**
+ * Resolve the effective domain and URL, handling simulated phishing test environments.
+ */
+export function getEffectivePageInfo(): { domain: string; url: string } {
+  const metaDomain = document.querySelector('meta[name="ctip-threat-domain"]')?.getAttribute('content')
+    || document.querySelector('meta[name="ctip-simulated-domain"]')?.getAttribute('content');
+  const metaUrl = document.querySelector('meta[name="ctip-simulated-url"]')?.getAttribute('content')
+    || document.querySelector('link[rel="canonical"]')?.getAttribute('href')
+    || document.querySelector('meta[property="og:url"]')?.getAttribute('content');
+
+  let domain = window.location.hostname;
+  let url = window.location.href;
+
+  if (metaDomain) {
+    domain = metaDomain.trim();
+  } else if ((domain === 'localhost' || domain === '127.0.0.1') && window.location.port === '8088') {
+    domain = 'ycce-student-auth.xyz';
+  }
+
+  if (metaUrl) {
+    url = metaUrl.trim();
+  } else if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '8088') {
+    url = 'https://ycce-student-auth.xyz/login';
+  }
+
+  return { domain, url };
+}
