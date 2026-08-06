@@ -1,13 +1,35 @@
-import { Bell, CheckCheck, ArrowRight, ShieldAlert } from 'lucide-react'
+import { useState } from 'react'
+import { Bell, CheckCheck, ArrowRight, ShieldAlert, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useRealtime } from '../context/RealtimeContext'
 
 export default function Notifications() {
-  const { notifications, unreadCount, markNotificationAsRead, markAllNotificationsAsRead } = useRealtime()
+  const {
+    notifications,
+    unreadCount,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    deleteNotification,
+    clearAllNotifications,
+  } = useRealtime()
+  const [clearing, setClearing] = useState(false)
+
+  const handleClearAll = async () => {
+    if (window.confirm('Are you sure you want to clear all notifications?')) {
+      setClearing(true)
+      await clearAllNotifications()
+      setClearing(false)
+    }
+  }
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    await deleteNotification(id)
+  }
 
   return (
     <div className="p-6 md:p-8 space-y-5 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">System Alerts & Notifications</h1>
@@ -22,14 +44,27 @@ export default function Notifications() {
           </p>
         </div>
 
-        {unreadCount > 0 && (
-          <button
-            onClick={markAllNotificationsAsRead}
-            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs transition shadow-xs font-medium"
-          >
-            <CheckCheck size={14} className="text-blue-600" /> Mark all read
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllNotificationsAsRead}
+              className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs transition shadow-xs font-medium cursor-pointer"
+            >
+              <CheckCheck size={14} className="text-blue-600" /> Mark all read
+            </button>
+          )}
+
+          {notifications.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              disabled={clearing}
+              className="flex items-center gap-1.5 bg-white hover:bg-red-50 hover:text-red-700 hover:border-red-200 border border-slate-200 text-slate-600 px-3 py-1.5 rounded-xl text-xs transition shadow-xs font-medium cursor-pointer"
+            >
+              <Trash2 size={13} className="text-red-500" />
+              {clearing ? 'Clearing...' : 'Clear all'}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -38,7 +73,7 @@ export default function Notifications() {
             <div
               key={n.id}
               onClick={() => !n.read_status && markNotificationAsRead(n.id)}
-              className={`bg-white border rounded-2xl p-4 flex items-start gap-3.5 transition duration-150 cursor-pointer shadow-xs ${
+              className={`bg-white border rounded-2xl p-4 flex items-start gap-3.5 transition duration-150 cursor-pointer shadow-xs group ${
                 n.read_status
                   ? 'border-slate-200 opacity-75 hover:opacity-100 hover:border-slate-300'
                   : 'border-blue-200 bg-blue-50/40'
@@ -61,9 +96,19 @@ export default function Notifications() {
                   <h4 className={`text-sm font-semibold truncate ${n.read_status ? 'text-slate-600' : 'text-slate-900'}`}>
                     {n.title}
                   </h4>
-                  <span className="text-[11px] text-slate-400 font-medium shrink-0">
-                    {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[11px] text-slate-400 font-medium">
+                      {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDelete(n.id, e)}
+                      title="Delete notification"
+                      className="p-1 rounded-lg text-slate-300 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
                 <p className="text-slate-600 text-xs mt-1 leading-relaxed">{n.message}</p>
 
