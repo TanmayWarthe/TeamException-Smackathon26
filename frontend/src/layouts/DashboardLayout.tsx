@@ -106,19 +106,7 @@ export default function DashboardLayout() {
 
         {/* Real-time Status Widget & Logout */}
         <div className="mt-auto shrink-0 pt-3 space-y-2 border-t border-slate-100">
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-            <div className="flex items-center justify-between">
-              <span className={`font-medium flex items-center gap-1.5 ${isConnected ? 'text-emerald-700' : 'text-amber-700'}`}>
-                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                {isConnected ? 'Live stream connected' : 'Reconnecting…'}
-              </span>
-              {isConnected ? (
-                <Wifi size={13} className="text-emerald-600" />
-              ) : (
-                <WifiOff size={13} className="text-amber-600" />
-              )}
-            </div>
-          </div>
+          
 
           <button
             onClick={handleLogout}
