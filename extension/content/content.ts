@@ -291,7 +291,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
   }
   if (message.type === 'ANALYSIS_RESULT' && message.payload) {
     const result = message.payload as AnalysisResult;
-    if (result.risk_score > 70) {
+    if (result.risk_score > 50) {
       if (bannerState.injected && bannerState.source === 'fallback' && result.source === 'backend') {
         updateWarningBanner(result);
       } else if (!bannerState.injected) {
