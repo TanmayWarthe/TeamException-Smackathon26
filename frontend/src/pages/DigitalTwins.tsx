@@ -88,8 +88,12 @@ export default function DigitalTwins() {
     setCreateSubmitting(true)
     setCreateError(null)
     setCreateSuccess(null)
+    let url = createOfficialUrl.trim()
+    if (url && !/^https?:\/\//i.test(url)) {
+      url = `https://${url}`
+    }
     try {
-      await api.createDigitalTwin(createWebsiteName, createOfficialUrl)
+      await api.createDigitalTwin(createWebsiteName, url)
       setCreateSuccess(`Digital Twin created for "${createWebsiteName}"!`)
       setCreateWebsiteName('')
       setCreateOfficialUrl('')
@@ -124,11 +128,16 @@ export default function DigitalTwins() {
     setEditError(null)
     setEditSuccess(null)
 
+    let url = editOfficialUrl.trim()
+    if (url && !/^https?:\/\//i.test(url)) {
+      url = `https://${url}`
+    }
+
     try {
       const updated = await api.updateDigitalTwin(editingTwin.id, {
         website_name: editWebsiteName,
-        official_url: editOfficialUrl,
-        regenerate_fingerprint: editRegenerateFp || editOfficialUrl !== editingTwin.official_url,
+        official_url: url,
+        regenerate_fingerprint: editRegenerateFp || url !== editingTwin.official_url,
       })
 
       setEditSuccess(`Updated "${updated.website_name}" successfully!`)
