@@ -125,6 +125,7 @@ export async function analyzeSite(payload: CandidateWebsite): Promise<AnalysisRe
         reasons: Array.isArray(data.reasons) && data.reasons.length > 0 ? data.reasons : [
           data.matched_twin ? `Compared against twin: ${data.matched_twin}` : 'Live DOM & visual risk analysis completed'
         ],
+        matched_twin: data.matched_twin || undefined,
         source: 'backend' as const,
       };
     }
