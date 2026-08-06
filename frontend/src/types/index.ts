@@ -87,6 +87,11 @@ export interface ThreatDetail {
   evidence: ThreatEvidence;
   timeline: TimelineItem[];
   admin_notes: string;
+  matched_twin?: {
+    website_name?: string;
+    domain?: string;
+    official_url?: string;
+  };
 }
 
 export interface DigitalTwin {
