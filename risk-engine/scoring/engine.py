@@ -105,8 +105,11 @@ def calculate_risk(fused_scores: dict[str, Any]) -> dict[str, Any]:
             }
 
     # ── 4. Apply hard risk floors for high-severity phishing red flags ──
+    # "Credential Submission" red flags now only appear when a form has
+    # password fields AND submits to an unknown server (not for marketing
+    # forms like HubSpot). So this floor is safe to apply when present.
     has_credential_theft = any(
-        "Credential Submission" in rf or "Unknown Server" in rf
+        "Credential Submission" in rf and "Unknown Server" in rf
         for rf in red_flags
     )
 
