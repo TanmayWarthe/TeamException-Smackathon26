@@ -36,7 +36,7 @@ body {
   flex-shrink: 0;
   width: 30px;
   height: 30px;
-  background: #18181b;
+  background: #2563eb;
   border-radius: 7px;
   display: flex;
   align-items: center;
@@ -200,12 +200,12 @@ body {
 }
 
 .ctip-btn-primary {
-  background: #18181b;
+  background: #2563eb;
   color: #ffffff;
 }
 
 .ctip-btn-primary:hover {
-  background: #27272a;
+  background: #1d4ed8;
 }
 
 .ctip-btn-secondary {
