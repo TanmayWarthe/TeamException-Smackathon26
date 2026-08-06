@@ -32,20 +32,20 @@ export default function Threats() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Active Threats & Phishing Dossiers</h1>
-            <span className="bg-cyan-500/10 text-cyan-400 text-xs px-2.5 py-0.5 rounded-full border border-cyan-500/20 font-medium">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Threat Intelligence Feed</h1>
+            <span className="bg-blue-50 text-blue-700 text-xs px-2.5 py-0.5 rounded-full border border-blue-200 font-medium">
               {filteredThreats.length} total
             </span>
           </div>
-          <p className="text-slate-400 text-xs mt-1">
+          <p className="text-slate-500 text-xs mt-1">
             Real-time feed of detected campus lookalike domains and credential harvesters
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-xs">
-            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-            <span className="text-slate-300 font-mono text-[11px]">
+          <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-xl text-xs shadow-xs">
+            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+            <span className="text-slate-700 text-[11px] font-medium">
               {isConnected ? 'Auto-Syncing' : 'Connecting'}
             </span>
           </div>
@@ -53,9 +53,9 @@ export default function Threats() {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl text-xs transition"
+            className="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs transition shadow-xs font-medium"
           >
-            <RefreshCw size={14} className={refreshing ? 'animate-spin text-cyan-400' : ''} />
+            <RefreshCw size={14} className={refreshing ? 'animate-spin text-blue-600' : ''} />
             Refresh
           </button>
         </div>
@@ -71,16 +71,16 @@ export default function Threats() {
       />
 
       {filteredThreats.length > 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
           <ThreatTable threats={filteredThreats} />
         </div>
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center text-slate-400 space-y-2">
-          <p className="font-semibold text-slate-300">No matching threats found</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500 space-y-2 shadow-sm">
+          <p className="font-semibold text-slate-900">No matching threats found</p>
           <p className="text-xs text-slate-500">
             {search || riskFilter !== 'ALL' || statusFilter !== 'ALL'
               ? 'Try adjusting your filters or search query.'
-              : 'The threat radar is clear. No active threats recorded.'}
+              : 'The threat feed is clear. No active threats recorded.'}
           </p>
         </div>
       )}
