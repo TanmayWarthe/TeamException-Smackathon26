@@ -32,7 +32,7 @@ _REASON_RULES = {
     "form": [
         (80, "Suspicious Form Action"),
         (65, "Login form mimics official credential page"),
-        (45, "Credential input fields detected on unverified domain"),
+        (50, "Form structure detected on unverified domain"),
     ],
     "css": [
         (85, "Color scheme matches official branding"),
