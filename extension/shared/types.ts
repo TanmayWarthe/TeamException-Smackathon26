@@ -39,6 +39,13 @@ export interface AnalysisResult {
   recommendation: RecommendationAction;
   /** Short human-readable reasons explaining the score */
   reasons: string[];
+  /**
+   * Origin of this result:
+   *   'backend'  — verified by the real /api/analyze endpoint
+   *   'fallback' — local deterministic estimate (backend timed out or unreachable)
+   * Used by the content script to decide whether a banner can be upgraded.
+   */
+  source?: 'backend' | 'fallback';
 }
 
 // ── Cached Entry (stored in chrome.storage.local) ───────────

@@ -14,7 +14,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { api } from '../services/api'
-import type { DigitalTwin } from '../services/mockData'
+import type { DigitalTwin } from '../types'
 import Modal from '../components/Modal'
 
 export default function DigitalTwins() {

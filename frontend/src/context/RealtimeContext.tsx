@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { api } from '../services/api';
-import type { Threat, AppNotification } from '../services/mockData';
+import type { Threat, AppNotification } from '../types';
 
 export interface WebSocketMessage {
   type: string;

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -21,22 +22,22 @@ async def get_dashboard_overview(db: AsyncSession = Depends(get_db)):
     trusted = sum(1 for t in threats if t.risk_score < 25)
     
     twins_res = await db.execute(select(func.count(DigitalTwinModel.id)))
-    twins_count = twins_res.scalar() or 5
+    twins_count = twins_res.scalar() or 0
     
     events_res = await db.execute(select(ProtectionEvent))
     events = events_res.scalars().all()
-    blocks = sum(1 for e in events if e.event_type == "LOGIN_BLOCKED") or 43
-    protected = len(events) + 842
+    blocks = sum(1 for e in events if e.event_type == "LOGIN_BLOCKED")
+    protected = len(events)
     
-    avg_risk = (sum(t.risk_score for t in threats) / total) if total > 0 else 62.4
+    avg_risk = (sum(t.risk_score for t in threats) / total) if total > 0 else 0.0
     
     return {
-        "total_threats": max(total, 125),
-        "critical": max(critical, 8),
-        "high": max(high, 12),
-        "suspicious": max(suspicious, 21),
-        "low": max(low, 34),
-        "trusted": max(trusted, 50),
+        "total_threats": total,
+        "critical": critical,
+        "high": high,
+        "suspicious": suspicious,
+        "low": low,
+        "trusted": trusted,
         "students_protected": protected,
         "credential_blocks": blocks,
         "digital_twins": twins_count,
@@ -44,39 +45,99 @@ async def get_dashboard_overview(db: AsyncSession = Depends(get_db)):
     }
 
 @router.get("/timeline")
-async def get_dashboard_timeline():
+async def get_dashboard_timeline(db: AsyncSession = Depends(get_db)):
+    threats_res = await db.execute(
+        select(Threat).order_by(Threat.detected_at.desc()).limit(10)
+    )
+    threats = threats_res.scalars().all()
+    
+    events_res = await db.execute(
+        select(ProtectionEvent).order_by(ProtectionEvent.timestamp.desc()).limit(10)
+    )
+    events = events_res.scalars().all()
+    
+    timeline_items = []
+    for t in threats:
+        ts = (t.detected_at or datetime.now(timezone.utc)).isoformat()
+        timeline_items.append({
+            "time": ts,
+            "event": "THREAT_SCORED",
+            "label": f"Risk Score: {t.risk_score}% ({t.threat_status})",
+            "website": t.domain or t.url,
+            "raw_time": t.detected_at or datetime.min.replace(tzinfo=timezone.utc),
+        })
+    
+    label_map = {
+        "LOGIN_BLOCKED": "Credential Interception Blocked",
+        "WARNING_DISPLAYED": "Security Warning Banner Displayed",
+        "LOGIN_ALLOWED": "Authentication Allowed",
+        "THREAT_IGNORED": "Warning Acknowledged / Proceeded",
+    }
+
+    for e in events:
+        ts = (e.timestamp or datetime.now(timezone.utc)).isoformat()
+        timeline_items.append({
+            "time": ts,
+            "event": e.event_type,
+            "label": label_map.get(e.event_type, e.event_type),
+            "website": e.domain,
+            "raw_time": e.timestamp or datetime.min.replace(tzinfo=timezone.utc),
+        })
+    
+    timeline_items.sort(key=lambda x: x["raw_time"], reverse=True)
+    
     return [
-        {"time": "2026-08-02T09:15:00Z", "event": "NEW_DOMAIN_DETECTED", "label": "New Domain Detected", "website": "ycce-erp-login.xyz"},
-        {"time": "2026-08-02T09:16:00Z", "event": "WEBSITE_CRAWLED", "label": "Website Crawled", "website": "ycce-erp-login.xyz"},
-        {"time": "2026-08-02T09:17:00Z", "event": "SIMILARITY_COMPLETED", "label": "Similarity Analysis Completed", "website": "ycce-erp-login.xyz"},
-        {"time": "2026-08-02T09:18:00Z", "event": "RISK_SCORED", "label": "Risk Score: 96%", "website": "ycce-erp-login.xyz"},
-        {"time": "2026-08-02T09:18:30Z", "event": "ADMIN_ALERT", "label": "Administrator Alert Generated", "website": "ycce-erp-login.xyz"},
-        {"time": "2026-08-02T09:21:00Z", "event": "STUDENT_BLOCKED", "label": "Student Attempt Blocked", "website": "ycce-erp-login.xyz"},
+        {
+            "time": item["time"],
+            "event": item["event"],
+            "label": item["label"],
+            "website": item["website"]
+        }
+        for item in timeline_items[:15]
     ]
 
 @router.get("/statistics")
-async def get_dashboard_statistics():
+async def get_dashboard_statistics(db: AsyncSession = Depends(get_db)):
+    threats_res = await db.execute(select(Threat))
+    threats = threats_res.scalars().all()
+
+    trusted = sum(1 for t in threats if t.risk_score < 25)
+    low = sum(1 for t in threats if 25 <= t.risk_score < 50)
+    suspicious = sum(1 for t in threats if 50 <= t.risk_score < 70)
+    high = sum(1 for t in threats if 70 <= t.risk_score < 90)
+    critical = sum(1 for t in threats if t.risk_score >= 90)
+
+    now = datetime.now(timezone.utc)
+    date_counts = {}
+    for i in range(6, -1, -1):
+        day_str = (now - timedelta(days=i)).strftime("%Y-%m-%d")
+        date_counts[day_str] = 0
+
+    for t in threats:
+        if t.detected_at:
+            day_str = t.detected_at.strftime("%Y-%m-%d")
+            if day_str in date_counts:
+                date_counts[day_str] += 1
+
+    threats_over_time = [{"date": d, "count": c} for d, c in date_counts.items()]
+
+    portal_counts = {}
+    for t in threats:
+        portal = t.targeted_portal or "ERP"
+        portal_counts[portal] = portal_counts.get(portal, 0) + 1
+
+    most_targeted_portals = [
+        {"portal": p, "count": c} for p, c in sorted(portal_counts.items(), key=lambda x: x[1], reverse=True)
+    ]
+
     return {
         "risk_distribution": [
-            {"name": "Trusted", "value": 50},
-            {"name": "Low", "value": 34},
-            {"name": "Suspicious", "value": 21},
-            {"name": "High", "value": 12},
-            {"name": "Critical", "value": 8},
+            {"name": "Trusted", "value": trusted},
+            {"name": "Low", "value": low},
+            {"name": "Suspicious", "value": suspicious},
+            {"name": "High", "value": high},
+            {"name": "Critical", "value": critical},
         ],
-        "threats_over_time": [
-            {"date": "2026-07-27", "count": 4},
-            {"date": "2026-07-28", "count": 7},
-            {"date": "2026-07-29", "count": 3},
-            {"date": "2026-07-30", "count": 9},
-            {"date": "2026-07-31", "count": 12},
-            {"date": "2026-08-01", "count": 6},
-            {"date": "2026-08-02", "count": 10},
-        ],
-        "most_targeted_portals": [
-            {"portal": "ERP", "count": 62},
-            {"portal": "Webmail", "count": 28},
-            {"portal": "Scholarship", "count": 19},
-            {"portal": "Exam Portal", "count": 16},
-        ],
+        "threats_over_time": threats_over_time,
+        "most_targeted_portals": most_targeted_portals,
     }

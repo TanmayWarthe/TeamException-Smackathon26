@@ -242,19 +242,8 @@ def _evaluate_candidate_evidence(
         return _no_twin_response(twin_domain)
 
     if twin is None:
-        print(f"[AIService] No twin found for '{twin_domain}' — searching available twins.")
-        try:
-            all_twins = twin_store.list_twins()
-            if all_twins:
-                fallback_domain = all_twins[0].get("domain", "")
-                print(f"[AIService] Falling back to available twin: {fallback_domain}")
-                twin = twin_store.load_twin(fallback_domain)
-                twin_domain = fallback_domain
-        except Exception:
-            pass
-
-        if twin is None:
-            return _no_twin_response(twin_domain)
+        print(f"[AIService] No twin registered for '{twin_domain}'. Returning UNKNOWN status.")
+        return _no_twin_response(twin_domain)
 
     print(f"[AIService] Target twin: {twin_domain}")
 

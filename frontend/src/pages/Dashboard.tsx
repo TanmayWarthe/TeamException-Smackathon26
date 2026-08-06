@@ -12,16 +12,16 @@ const COLORS = ['#10b981', '#38bdf8', '#f59e0b', '#f97316', '#ef4444']
 export default function Dashboard() {
   const { threats, isConnected } = useRealtime()
   const [stats, setStats] = useState({
-    total_threats: 125,
-    critical: 8,
-    high: 12,
-    suspicious: 21,
-    low: 34,
-    trusted: 50,
-    students_protected: 842,
-    credential_blocks: 43,
-    digital_twins: 5,
-    average_risk_score: 62.4,
+    total_threats: 0,
+    critical: 0,
+    high: 0,
+    suspicious: 0,
+    low: 0,
+    trusted: 0,
+    students_protected: 0,
+    credential_blocks: 0,
+    digital_twins: 0,
+    average_risk_score: 0,
   })
   const [analytics, setAnalytics] = useState<any>(null)
   

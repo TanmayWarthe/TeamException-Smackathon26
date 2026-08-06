@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import type { Threat } from '../services/mockData'
+import type { Threat } from '../types'
 import RiskBadge from './RiskBadge'
 
 export default function ThreatTable({ threats }: { threats: Threat[] }) {
