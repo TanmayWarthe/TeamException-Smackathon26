@@ -30,9 +30,9 @@ class Threat(Base):
     detected_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     screenshot_path = Column(String, default="")
     official_screenshot_path = Column(String, default="")
-    ip_address = Column(String, default="185.220.101.4")
-    registrar = Column(String, default="NameCheap Inc.")
-    ssl_status = Column(String, default="Valid (Recently Issued)")
+    ip_address = Column(String, default="Not available")
+    registrar = Column(String, default="Not available")
+    ssl_status = Column(String, default="No SSL Certificate (HTTP only)")
     admin_notes = Column(Text, default="")
     
     # Detailed telemetry JSONs
