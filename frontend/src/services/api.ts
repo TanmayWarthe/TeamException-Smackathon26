@@ -105,7 +105,7 @@ export const api = {
   async analyzeUrl(url: string, html?: string) {
     const payload: { url: string; html?: string } = { url };
     if (html) payload.html = html;
-    const res = await client.post('/analyze', payload);
+    const res = await client.post('/analyze', payload, { timeout: 120000 });
     return res.data;
   },
 
