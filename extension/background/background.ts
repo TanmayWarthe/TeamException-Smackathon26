@@ -303,14 +303,15 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
     const tab = await chrome.tabs.get(activeInfo.tabId);
     if (tab?.url && tab.url.startsWith('http')) {
       const domain = new URL(tab.url).hostname;
+      const domainKey = getDomainKey(tab.url, domain);
       const state = tabStates.get(activeInfo.tabId);
-      if (state?.result) {
+      if (state?.result && state.domain === domainKey) {
         updateBadge(activeInfo.tabId, state.result);
       } else {
-        const cached = await getCachedResult(domain);
+        const cached = await getCachedResult(domainKey);
         if (cached) {
           tabStates.set(activeInfo.tabId, {
-            domain,
+            domain: domainKey,
             url: tab.url,
             result: cached.result,
             cachedAt: cached.cachedAt,
