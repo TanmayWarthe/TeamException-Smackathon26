@@ -48,9 +48,13 @@ def compute_url_intelligence(
     red_flags: list[str] = []
     penalties = 0.0  # Accumulated penalty points (subtracted from 100)
 
-    parsed = urlparse(candidate_url)
-    candidate_domain = (parsed.hostname or "").lower()
-    twin_domain = twin_domain.lower()
+    url_str = (candidate_url or "").strip()
+    if url_str and not url_str.startswith(("http://", "https://")):
+        url_str = f"https://{url_str}"
+
+    parsed = urlparse(url_str)
+    candidate_domain = (parsed.hostname or url_str.replace("https://", "").replace("http://", "").split("/")[0]).lower()
+    twin_domain = (twin_domain or "").lower()
 
     if not candidate_domain:
         return 20.0, ["Could not parse candidate URL"]
