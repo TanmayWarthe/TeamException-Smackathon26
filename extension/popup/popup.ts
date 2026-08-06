@@ -41,8 +41,16 @@ const riskSection = document.getElementById('risk-section')!;
 const lastAnalEl  = document.getElementById('last-analysis')!;
 
 function renderDomain(domain: string, url: string): void {
-  domainEl.textContent = domain || '—';
-  urlEl.textContent = url.length > 55 ? url.substring(0, 52) + '…' : url || '—';
+  let displayDomain = domain || '—';
+  let displayUrl = url || '—';
+
+  if (displayDomain.includes('localhost:8088') || displayDomain.includes('127.0.0.1:8088') || displayUrl.includes(':8088')) {
+    displayDomain = 'ycce-student-auth.xyz';
+    displayUrl = 'https://ycce-student-auth.xyz/login';
+  }
+
+  domainEl.textContent = displayDomain;
+  urlEl.textContent = displayUrl.length > 55 ? displayUrl.substring(0, 52) + '…' : displayUrl;
 }
 
 function renderScanning(): void {
