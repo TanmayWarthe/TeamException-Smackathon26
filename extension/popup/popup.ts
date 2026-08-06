@@ -140,17 +140,12 @@ function renderRisk(result: AnalysisResult, cachedAt: string | null, domain?: st
     ` : ''}
 
     <div class="ctip-actions">
-      <button id="btn-rescan" class="ctip-btn ctip-btn-secondary">Re-scan</button>
-      <button id="btn-open-soc" class="ctip-btn ctip-btn-primary">SOC Console</button>
+      <button id="btn-rescan" class="ctip-btn ctip-btn-secondary">Re-scan Page</button>
     </div>
   `;
 
   document.getElementById('btn-rescan')?.addEventListener('click', () => {
     triggerScan(domain || '', url || '');
-  });
-
-  document.getElementById('btn-open-soc')?.addEventListener('click', () => {
-    chrome.tabs.create({ url: 'http://localhost:5173' });
   });
 
   if (cachedAt) {
