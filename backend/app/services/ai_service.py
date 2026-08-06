@@ -198,21 +198,32 @@ def _evaluate_candidate_evidence(
     candidate_url = candidate_evidence.get("candidate_url", "")
     candidate_domain = candidate_evidence.get("domain", "").lower()
 
-    # ── 0. Institutional Allowlist & Official Domain Check ──────
+    # ── 0. Institutional Allowlist & Global Public Domain Check ──
     INSTITUTIONAL_ROOTS = {"ycce.edu", "ycce.edu.in", "meghegroup.org", "nagpuruniversity.ac.in"}
+    GLOBAL_PUBLIC_ALLOWLIST = {
+        "github.com", "google.com", "microsoft.com", "stackoverflow.com",
+        "linkedin.com", "apple.com", "amazon.com", "facebook.com", "twitter.com", "x.com"
+    }
+
     is_official_institutional = (
         candidate_domain in INSTITUTIONAL_ROOTS
         or any(candidate_domain.endswith("." + root) for root in INSTITUTIONAL_ROOTS)
     )
-    if is_official_institutional:
-        print(f"[AIService] '{candidate_domain}' is a verified official institutional domain.")
+    is_global_public = (
+        candidate_domain in GLOBAL_PUBLIC_ALLOWLIST
+        or any(candidate_domain.endswith("." + domain) for domain in GLOBAL_PUBLIC_ALLOWLIST)
+    )
+
+    if is_official_institutional or is_global_public:
+        domain_type = "campus" if is_official_institutional else "global public"
+        print(f"[AIService] '{candidate_domain}' is a verified {domain_type} domain.")
         return {
             "status": "TRUSTED",
             "risk_score": 0,
             "confidence": 99,
             "recommendation": "ALLOW",
             "reasons": [
-                f"Official verified campus domain ({candidate_domain})"
+                f"Verified official {domain_type} domain ({candidate_domain})"
             ],
             "details": {
                 "fused_scores": {
