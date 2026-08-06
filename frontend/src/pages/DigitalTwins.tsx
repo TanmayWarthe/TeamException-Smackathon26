@@ -191,10 +191,10 @@ export default function DigitalTwins() {
       {/* Toast Notification */}
       {actionToast && (
         <div
-          className={`fixed top-5 right-5 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-xl text-sm font-medium transition-all ${
+          className={`fixed top-5 right-5 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all ${
             actionToast.type === 'success'
-              ? 'bg-emerald-950 border border-emerald-500/40 text-emerald-300'
-              : 'bg-red-950 border border-red-500/40 text-red-300'
+              ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border border-red-200 text-red-800'
           }`}
         >
           {actionToast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
@@ -206,25 +206,25 @@ export default function DigitalTwins() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Digital Twin Manager</h1>
-            <span className="bg-cyan-500/10 text-cyan-400 text-xs px-2.5 py-0.5 rounded-full font-semibold border border-cyan-500/20">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Digital Twin Manager</h1>
+            <span className="bg-blue-50 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-semibold border border-blue-200">
               {twins.length} Protected
             </span>
           </div>
-          <p className="text-slate-400 text-sm mt-1">
-            Registered baseline visual, DOM & structural fingerprints for campus websites.
+          <p className="text-slate-500 text-sm mt-1">
+            Registered baseline visual, DOM &amp; structural fingerprints for campus websites.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search portals or domains..."
-              className="bg-slate-900 border border-slate-800 focus:border-cyan-500 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 outline-none w-64 transition"
+              className="bg-white border border-slate-300 focus:border-blue-500 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none w-64 transition"
             />
           </div>
 
@@ -234,7 +234,7 @@ export default function DigitalTwins() {
               setCreateSuccess(null)
               setIsCreateModalOpen(true)
             }}
-            className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950 font-semibold rounded-lg px-4 py-2 text-sm transition shadow-lg shadow-cyan-500/10"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-4 py-2 text-sm transition shadow-xs"
           >
             <Plus size={16} /> Register New Portal
           </button>
@@ -244,13 +244,13 @@ export default function DigitalTwins() {
       {/* Main Grid Content */}
       {loading ? (
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="animate-spin text-cyan-400" size={36} />
+          <Loader2 className="animate-spin text-blue-600" size={36} />
         </div>
       ) : filteredTwins.length === 0 ? (
-        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-12 text-center">
-          <Fingerprint className="mx-auto text-slate-600 mb-3" size={44} />
-          <h3 className="text-white font-semibold text-base">No Digital Twins Found</h3>
-          <p className="text-slate-400 text-sm mt-1 max-w-md mx-auto">
+        <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
+          <Fingerprint className="mx-auto text-slate-400 mb-3" size={44} />
+          <h3 className="text-slate-900 font-semibold text-base">No Digital Twins Found</h3>
+          <p className="text-slate-500 text-sm mt-1 max-w-md mx-auto">
             {searchQuery ? `No twins matching "${searchQuery}"` : 'Register your first institutional portal to start monitoring.'}
           </p>
         </div>
@@ -261,35 +261,35 @@ export default function DigitalTwins() {
             return (
               <div
                 key={dt.id}
-                className="group relative bg-slate-900/90 hover:bg-slate-900 border border-slate-800 hover:border-slate-700/80 rounded-xl p-5 transition-all duration-200 shadow-md hover:shadow-cyan-950/20 flex flex-col justify-between"
+                className="group relative bg-white hover:border-slate-300 border border-slate-200 rounded-xl p-5 transition-all duration-200 shadow-sm hover:shadow-md flex flex-col justify-between"
               >
                 <div>
                   {/* Top Bar: Icon, Version, Action Buttons */}
                   <div className="flex items-center justify-between mb-3.5">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform">
+                      <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-105 transition-transform">
                         <Fingerprint size={20} />
                       </div>
-                      <span className="bg-cyan-500/10 text-cyan-400 text-xs px-2.5 py-1 rounded-md font-semibold border border-cyan-500/20">
+                      <span className="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-md font-semibold border border-blue-100">
                         v{dt.fingerprint_version}
                       </span>
                     </div>
 
                     {/* Action Buttons: Quick Sync, Edit, Delete */}
-                    <div className="flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleQuickReSync(dt)}
                         disabled={isSyncing}
                         title="Re-fingerprint & capture latest baseline"
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-cyan-500/20 text-slate-400 hover:text-cyan-400 transition"
+                        className="p-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition"
                       >
-                        <RefreshCw size={14} className={isSyncing ? 'animate-spin text-cyan-400' : ''} />
+                        <RefreshCw size={14} className={isSyncing ? 'animate-spin text-blue-600' : ''} />
                       </button>
 
                       <button
                         onClick={() => openEditModal(dt)}
                         title="Edit Portal Details"
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-blue-500/20 text-slate-400 hover:text-blue-400 transition"
+                        className="p-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition"
                       >
                         <Edit2 size={14} />
                       </button>
@@ -297,7 +297,7 @@ export default function DigitalTwins() {
                       <button
                         onClick={() => openDeleteModal(dt)}
                         title="Remove Digital Twin"
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition"
+                        className="p-1.5 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 transition"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -305,32 +305,32 @@ export default function DigitalTwins() {
                   </div>
 
                   {/* Title & URL */}
-                  <h3 className="text-white font-semibold text-lg group-hover:text-cyan-300 transition-colors">
+                  <h3 className="text-slate-900 font-semibold text-lg group-hover:text-blue-600 transition-colors">
                     {dt.website_name}
                   </h3>
 
-                  <div className="flex items-center gap-1.5 text-slate-400 text-xs mt-2 bg-slate-950/60 px-2.5 py-1.5 rounded-md border border-slate-800/80">
-                    <Globe size={13} className="shrink-0 text-cyan-500/70" />
+                  <div className="flex items-center gap-1.5 text-slate-600 text-xs mt-2 bg-slate-50 px-2.5 py-1.5 rounded-md border border-slate-200">
+                    <Globe size={13} className="shrink-0 text-blue-500" />
                     <a
                       href={dt.official_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="hover:text-cyan-400 transition truncate max-w-[240px]"
+                      className="hover:text-blue-600 transition truncate max-w-[240px]"
                     >
                       {dt.official_url}
                     </a>
-                    <ExternalLink size={11} className="shrink-0 text-slate-600 ml-auto" />
+                    <ExternalLink size={11} className="shrink-0 text-slate-400 ml-auto" />
                   </div>
                 </div>
 
                 {/* Footer Status */}
-                <div className="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <ShieldCheck size={14} className="text-emerald-400" />
+                <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 text-emerald-700 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <ShieldCheck size={14} className="text-emerald-600" />
                     Active Protection
                   </div>
-                  <span className="text-slate-500">
+                  <span className="text-slate-400">
                     {new Date(dt.updated_at || dt.created_at).toLocaleDateString()}
                   </span>
                 </div>
@@ -348,35 +348,35 @@ export default function DigitalTwins() {
       >
         <form onSubmit={handleCreateSubmit} className="space-y-4">
           {createError && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-lg flex items-center gap-2">
+            <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-lg flex items-center gap-2">
               <AlertTriangle size={16} className="shrink-0" /> {createError}
             </div>
           )}
           {createSuccess && (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs p-3 rounded-lg flex items-center gap-2">
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs p-3 rounded-lg flex items-center gap-2">
               <CheckCircle2 size={16} className="shrink-0" /> {createSuccess}
             </div>
           )}
           <div>
-            <label className="block text-slate-300 text-sm mb-1.5 font-medium">Website / Portal Name</label>
+            <label className="block text-slate-700 text-sm mb-1.5 font-medium">Website / Portal Name</label>
             <input
               type="text"
               value={createWebsiteName}
               onChange={(e) => setCreateWebsiteName(e.target.value)}
               placeholder="e.g. YCCE Examination Portal"
-              className="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:border-cyan-500 transition text-sm"
+              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 outline-none focus:border-blue-500 transition text-sm"
               disabled={createSubmitting}
               required
             />
           </div>
           <div>
-            <label className="block text-slate-300 text-sm mb-1.5 font-medium">Official URL</label>
+            <label className="block text-slate-700 text-sm mb-1.5 font-medium">Official URL</label>
             <input
               type="url"
               value={createOfficialUrl}
               onChange={(e) => setCreateOfficialUrl(e.target.value)}
               placeholder="https://exam.ycce.edu"
-              className="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:border-cyan-500 transition text-sm"
+              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 outline-none focus:border-blue-500 transition text-sm"
               disabled={createSubmitting}
               required
             />
@@ -387,12 +387,12 @@ export default function DigitalTwins() {
           <button
             type="submit"
             disabled={createSubmitting}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 text-slate-950 font-semibold rounded-lg py-2.5 transition text-sm mt-2"
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold rounded-lg py-2.5 transition text-sm mt-2 shadow-xs"
           >
             {createSubmitting ? (
               <>
                 <Loader2 className="animate-spin" size={16} />
-                Capturing & Generating Baseline (5-10s)...
+                Capturing &amp; Generating Baseline (5-10s)...
               </>
             ) : (
               'Generate Digital Twin'
@@ -409,37 +409,37 @@ export default function DigitalTwins() {
       >
         <form onSubmit={handleEditSubmit} className="space-y-4">
           {editError && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-lg flex items-center gap-2">
+            <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-lg flex items-center gap-2">
               <AlertTriangle size={16} className="shrink-0" /> {editError}
             </div>
           )}
           {editSuccess && (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs p-3 rounded-lg flex items-center gap-2">
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs p-3 rounded-lg flex items-center gap-2">
               <CheckCircle2 size={16} className="shrink-0" /> {editSuccess}
             </div>
           )}
 
           <div>
-            <label className="block text-slate-300 text-sm mb-1.5 font-medium">Website / Portal Name</label>
+            <label className="block text-slate-700 text-sm mb-1.5 font-medium">Website / Portal Name</label>
             <input
               type="text"
               value={editWebsiteName}
               onChange={(e) => setEditWebsiteName(e.target.value)}
               placeholder="e.g. YCCE Official Website"
-              className="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:border-cyan-500 transition text-sm"
+              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 outline-none focus:border-blue-500 transition text-sm"
               disabled={editSubmitting}
               required
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 text-sm mb-1.5 font-medium">Official Base URL / Domain</label>
+            <label className="block text-slate-700 text-sm mb-1.5 font-medium">Official Base URL / Domain</label>
             <input
               type="url"
               value={editOfficialUrl}
               onChange={(e) => setEditOfficialUrl(e.target.value)}
               placeholder="https://www.ycce.edu"
-              className="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none focus:border-cyan-500 transition text-sm"
+              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 outline-none focus:border-blue-500 transition text-sm"
               disabled={editSubmitting}
               required
             />
@@ -448,17 +448,17 @@ export default function DigitalTwins() {
             </p>
           </div>
 
-          <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800 flex items-start gap-3">
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 flex items-start gap-3">
             <input
               type="checkbox"
               id="regen-fp-checkbox"
               checked={editRegenerateFp}
               onChange={(e) => setEditRegenerateFp(e.target.checked)}
-              className="mt-1 rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0 focus:outline-none"
+              className="mt-1 rounded bg-white border-slate-300 text-blue-600 focus:ring-0 focus:outline-none"
               disabled={editSubmitting}
             />
-            <label htmlFor="regen-fp-checkbox" className="text-xs text-slate-300 cursor-pointer">
-              <span className="font-semibold text-white block">Re-Capture Fingerprint Baseline</span>
+            <label htmlFor="regen-fp-checkbox" className="text-xs text-slate-600 cursor-pointer">
+              <span className="font-semibold text-slate-900 block">Re-Capture Fingerprint Baseline</span>
               Re-scan and refresh DOM structure, login form fields, and screenshot embeddings for this URL.
             </label>
           </div>
@@ -468,14 +468,14 @@ export default function DigitalTwins() {
               type="button"
               onClick={() => setIsEditModalOpen(false)}
               disabled={editSubmitting}
-              className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-lg py-2.5 transition text-sm"
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg py-2.5 transition text-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={editSubmitting}
-              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 text-slate-950 font-semibold rounded-lg py-2.5 transition text-sm"
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold rounded-lg py-2.5 transition text-sm shadow-xs"
             >
               {editSubmitting ? (
                 <>
@@ -498,18 +498,18 @@ export default function DigitalTwins() {
       >
         <div className="space-y-4">
           {deleteError && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-lg flex items-center gap-2">
+            <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-lg flex items-center gap-2">
               <AlertTriangle size={16} className="shrink-0" /> {deleteError}
             </div>
           )}
 
-          <p className="text-slate-300 text-sm">
+          <p className="text-slate-700 text-sm">
             Are you sure you want to remove the Digital Twin for{' '}
-            <strong className="text-white font-semibold">"{deletingTwin?.website_name}"</strong>?
+            <strong className="text-slate-900 font-semibold">"{deletingTwin?.website_name}"</strong>?
           </p>
           <p className="text-slate-500 text-xs">
             Removing this twin will disable automated visual similarity matching against fake phishing portals for{' '}
-            <span className="text-slate-400 underline">{deletingTwin?.official_url}</span>.
+            <span className="text-slate-700 underline">{deletingTwin?.official_url}</span>.
           </p>
 
           <div className="flex items-center gap-3 pt-3">
@@ -517,7 +517,7 @@ export default function DigitalTwins() {
               type="button"
               onClick={() => setIsDeleteModalOpen(false)}
               disabled={deleteSubmitting}
-              className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-lg py-2.5 transition text-sm"
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg py-2.5 transition text-sm"
             >
               Cancel
             </button>
@@ -525,7 +525,7 @@ export default function DigitalTwins() {
               type="button"
               onClick={handleDeleteSubmit}
               disabled={deleteSubmitting}
-              className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-semibold rounded-lg py-2.5 transition text-sm"
+              className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold rounded-lg py-2.5 transition text-sm shadow-xs"
             >
               {deleteSubmitting ? (
                 <>
