@@ -24,12 +24,26 @@ async def seed_initial_data():
         # Database initializes clean without pre-populated fake threats
         pass
 
+def prewarm_clip():
+    try:
+        import sys, importlib.util
+        from pathlib import Path
+        root = Path(__file__).resolve().parent.parent
+        spec = importlib.util.spec_from_file_location("clip", str(root / "digital-twin" / "embeddings" / "clip_embedder.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod._load_model()
+        print("[Startup] CLIP AI Model pre-warmed & ready in memory.")
+    except Exception as e:
+        print(f"[Startup] CLIP pre-warm notice: {e}")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: create tables & seed
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     await seed_initial_data()
+    asyncio.create_task(asyncio.to_thread(prewarm_clip))
     yield
     # Shutdown
     await engine.dispose()
