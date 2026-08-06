@@ -58,6 +58,7 @@ yarn-error.log*
 # Temporary Runtime Artifacts
 digital-twin/storage/screenshots/candidate_*
 digital-twin/storage/embeddings/candidate_*
+digital-twin/storage/logos/candidate_*
 
 
 # project pdfs
