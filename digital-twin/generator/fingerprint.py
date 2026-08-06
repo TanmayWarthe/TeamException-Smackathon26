@@ -65,8 +65,8 @@ async def generate_fingerprint(
     Generate a complete Digital Twin fingerprint for an official website (async).
 
     Args:
-        url: The official URL to fingerprint (e.g. 'https://erp.ycce.edu.in')
-        website_name: Human-readable name (e.g. 'YCCE ERP')
+        url: The official URL to fingerprint (e.g. 'https://ycce.edu')
+        website_name: Human-readable name (e.g. 'YCCE Official Website')
         fingerprint_version: Version number for the fingerprint schema
 
     Returns:
