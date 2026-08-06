@@ -102,7 +102,7 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
     )
     twin_record = twin_db_res.scalars().first()
     portal_name = twin_record.website_name if twin_record else (
-        "YCCE ERP Portal" if "erp" in twin_domain else f"Campus {twin_domain}"
+        "YCCE ERP Portal" if "erp" in twin_domain else "YCCE Official Portal"
     )
     official_screenshot = twin_record.screenshot_path if twin_record else ""
 
