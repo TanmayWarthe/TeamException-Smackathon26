@@ -72,7 +72,7 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
 
     details = result.get("details", {})
     fused_scores = details.get("fused_scores", {})
-    twin_domain = details.get("twin_domain", "erp.ycce.edu.in")
+    twin_domain = details.get("twin_domain", "ycce.edu")
 
     # Build risk breakdown for rich explanation
     risk_breakdown = []
