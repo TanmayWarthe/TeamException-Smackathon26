@@ -182,7 +182,7 @@ def _no_twin_response(twin_domain: str) -> dict[str, Any]:
 # ── Shared AI Evaluation Pipeline ─────────────────────────────
 def _evaluate_candidate_evidence(
     candidate_evidence: dict[str, Any],
-    twin_domain: str = "erp.ycce.edu.in",
+    twin_domain: str = "ycce.edu",
     analysis_type: str = "HTML",
 ) -> dict[str, Any]:
     """
@@ -365,7 +365,7 @@ def _evaluate_candidate_evidence(
 def run_ai_analysis_from_html(
     candidate_url: str,
     html: str,
-    twin_domain: str = "erp.ycce.edu.in",
+    twin_domain: str = "ycce.edu",
 ) -> dict[str, Any]:
     """
     Analyse a candidate page using its submitted HTML directly.
@@ -440,7 +440,7 @@ def run_ai_analysis_from_html(
 # ── URL-based analysis (uses Playwright) ──────────────────────
 async def run_ai_analysis(
     candidate_url: str,
-    twin_domain: str = "erp.ycce.edu.in",
+    twin_domain: str = "ycce.edu",
 ) -> dict[str, Any]:
     """
     Run full AI analysis by fetching and rendering the URL via Playwright (async).
