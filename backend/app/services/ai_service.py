@@ -195,15 +195,48 @@ def _evaluate_candidate_evidence(
       5. Conditional reason generation (explain)
       6. Consistent console logging
     """
-    candidate_url = candidate_evidence.get("candidate_url", "")
-    candidate_domain = candidate_evidence.get("domain", "").lower()
+    candidate_url = (candidate_evidence.get("candidate_url") or "").strip()
+    if candidate_url and not candidate_url.startswith(("http://", "https://")):
+        candidate_url = f"https://{candidate_url}"
+
+    raw_domain = (candidate_evidence.get("domain") or "").strip().lower()
+    if not raw_domain or raw_domain == "unknown":
+        from urllib.parse import urlparse
+        raw_domain = (urlparse(candidate_url).hostname or candidate_url.replace("https://", "").replace("http://", "").split("/")[0]).lower()
+    
+    # Strip any port or whitespace
+    candidate_domain = raw_domain.split(":")[0].strip()
 
     # ── 0. Institutional Allowlist & Global Public Domain Check ──
     INSTITUTIONAL_ROOTS = {"ycce.edu", "ycce.edu.in", "meghegroup.org", "nagpuruniversity.ac.in"}
     GLOBAL_PUBLIC_ALLOWLIST = {
+        # Major tech platforms
         "github.com", "google.com", "microsoft.com", "stackoverflow.com",
-        "linkedin.com", "apple.com", "amazon.com", "facebook.com", "twitter.com", "x.com"
+        "linkedin.com", "apple.com", "amazon.com", "facebook.com", "twitter.com", "x.com",
+        "instagram.com", "youtube.com", "reddit.com", "discord.com", "slack.com",
+        "dropbox.com", "notion.so", "figma.com", "canva.com", "zoom.us",
+        # Developer / open-source
+        "jupyter.org", "python.org", "nodejs.org", "npmjs.com", "pypi.org",
+        "rust-lang.org", "golang.org", "go.dev", "ruby-lang.org",
+        "docker.com", "kubernetes.io", "terraform.io", "ansible.com",
+        "gitlab.com", "bitbucket.org", "sourceforge.net", "codepen.io",
+        "replit.com", "vercel.com", "netlify.com", "heroku.com",
+        "digitalocean.com", "cloudflare.com", "fastly.com",
+        "readthedocs.io", "docs.rs",
+        # Encyclopedic / educational
+        "wikipedia.org", "wikimedia.org", "medium.com", "substack.com",
+        "mozilla.org", "w3.org", "w3schools.com", "mdn.io",
+        "khanacademy.org", "coursera.org", "edx.org", "udemy.com",
+        "mit.edu", "stanford.edu", "harvard.edu",
+        # Cloud providers
+        "aws.amazon.com", "cloud.google.com", "azure.microsoft.com",
+        "firebase.google.com", "supabase.com", "mongodb.com",
+        # Indian institutional / government
+        "nic.in", "gov.in", "aicte-india.org", "ugc.ac.in",
     }
+
+    # Auto-trust well-known institutional TLDs (.edu, .gov, .mil, .ac.in)
+    TRUSTED_TLD_PATTERNS = (".edu", ".gov", ".mil", ".ac.in", ".edu.in", ".res.in")
 
     is_official_institutional = (
         candidate_domain in INSTITUTIONAL_ROOTS
@@ -213,9 +246,12 @@ def _evaluate_candidate_evidence(
         candidate_domain in GLOBAL_PUBLIC_ALLOWLIST
         or any(candidate_domain.endswith("." + domain) for domain in GLOBAL_PUBLIC_ALLOWLIST)
     )
+    is_trusted_tld = any(
+        candidate_domain.endswith(tld) for tld in TRUSTED_TLD_PATTERNS
+    )
 
-    if is_official_institutional or is_global_public:
-        domain_type = "campus" if is_official_institutional else "global public"
+    if is_official_institutional or is_global_public or is_trusted_tld:
+        domain_type = "campus" if is_official_institutional else ("educational/government" if is_trusted_tld else "global public")
         print(f"[AIService] '{candidate_domain}' is a verified {domain_type} domain.")
         return {
             "status": "TRUSTED",
@@ -346,11 +382,15 @@ def run_ai_analysis_from_html(
     Returns:
         Standard analysis dict. If no twin exists → UNKNOWN result.
     """
+    candidate_url = (candidate_url or "").strip()
+    if candidate_url and not candidate_url.startswith(("http://", "https://")):
+        candidate_url = f"https://{candidate_url}"
+
     print(f"\n[AIService] HTML-based analysis: {candidate_url}")
     print(f"[AIService] HTML length: {len(html)} chars")
 
     from urllib.parse import urlparse
-    candidate_domain = urlparse(candidate_url).hostname or candidate_url
+    candidate_domain = urlparse(candidate_url).hostname or candidate_url.replace("https://", "").replace("http://", "").split("/")[0]
 
     try:
         dom_mod = _get_dom_extractor()
@@ -410,6 +450,10 @@ async def run_ai_analysis(
     failure (e.g. network unreachable) so the URL-intelligence and
     no-twin checks still run correctly.
     """
+    candidate_url = (candidate_url or "").strip()
+    if candidate_url and not candidate_url.startswith(("http://", "https://")):
+        candidate_url = f"https://{candidate_url}"
+
     print(f"\n[AIService] URL-based analysis (Playwright): {candidate_url}")
 
     try:
