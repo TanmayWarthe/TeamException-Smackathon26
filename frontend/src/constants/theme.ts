@@ -4,29 +4,29 @@
 
 export type RiskLevel = 'TRUSTED' | 'LOW' | 'SUSPICIOUS' | 'HIGH' | 'CRITICAL'
 
-// ---------- Base App Theme (Dark Cyber-Security Theme) ----------
+// ---------- Base App Theme (Clean Light Consumer Theme) ----------
 export const theme = {
   bg: {
-    base: 'bg-slate-950',       // page background
-    panel: 'bg-slate-900',      // cards, sidebar, modals
-    hover: 'hover:bg-slate-800',
-    input: 'bg-slate-800',
+    base: 'bg-slate-50',        // page background
+    panel: 'bg-white',          // cards, sidebar, modals
+    hover: 'hover:bg-slate-50',
+    input: 'bg-white',
   },
   border: {
-    default: 'border-slate-800',
-    input: 'border-slate-700',
+    default: 'border-slate-200',
+    input: 'border-slate-300',
   },
   text: {
-    primary: 'text-white',
-    secondary: 'text-slate-400',
-    muted: 'text-slate-500',
+    primary: 'text-slate-900',
+    secondary: 'text-slate-600',
+    muted: 'text-slate-400',
   },
   accent: {
-    text: 'text-cyan-400',
-    bg: 'bg-cyan-500',
-    bgHover: 'hover:bg-cyan-400',
-    bgSoft: 'bg-cyan-500/10',
-    ring: 'focus:border-cyan-500',
+    text: 'text-blue-600',
+    bg: 'bg-blue-600',
+    bgHover: 'hover:bg-blue-700',
+    bgSoft: 'bg-blue-50',
+    ring: 'focus:border-blue-500',
   },
 }
 
@@ -38,33 +38,33 @@ export const riskConfig: Record<
 > = {
   TRUSTED: {
     label: 'Trusted',
-    badge: 'bg-green-500/10 text-green-400 border border-green-500/30',
-    dot: 'bg-green-400',
-    text: 'text-green-400',
+    badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    dot: 'bg-emerald-500',
+    text: 'text-emerald-700',
   },
   LOW: {
     label: 'Low Risk',
-    badge: 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/30',
-    dot: 'bg-yellow-400',
-    text: 'text-yellow-400',
+    badge: 'bg-amber-50 text-amber-700 border border-amber-200',
+    dot: 'bg-amber-500',
+    text: 'text-amber-700',
   },
   SUSPICIOUS: {
     label: 'Suspicious',
-    badge: 'bg-orange-500/10 text-orange-400 border border-orange-500/30',
-    dot: 'bg-orange-400',
-    text: 'text-orange-400',
+    badge: 'bg-orange-50 text-orange-700 border border-orange-200',
+    dot: 'bg-orange-500',
+    text: 'text-orange-700',
   },
   HIGH: {
     label: 'High Risk',
-    badge: 'bg-red-500/10 text-red-400 border border-red-500/30',
-    dot: 'bg-red-400',
-    text: 'text-red-400',
+    badge: 'bg-red-50 text-red-700 border border-red-200',
+    dot: 'bg-red-500',
+    text: 'text-red-700',
   },
   CRITICAL: {
     label: 'Critical',
-    badge: 'bg-red-500/20 text-red-500 border border-red-500/50 animate-pulse',
-    dot: 'bg-red-500',
-    text: 'text-red-500',
+    badge: 'bg-rose-100 text-rose-800 border border-rose-300',
+    dot: 'bg-rose-600',
+    text: 'text-rose-800',
   },
 }
 
