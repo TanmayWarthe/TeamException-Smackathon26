@@ -1,13 +1,14 @@
 import { useState, useMemo } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Trash2 } from 'lucide-react'
 import ThreatTable from '../components/ThreatTable'
 import ThreatFilters from '../components/ThreatFilters'
 import { useRealtime } from '../context/RealtimeContext'
 import { getRiskLevel } from '../constants/theme'
 
 export default function Threats() {
-  const { threats, refreshThreats, isConnected } = useRealtime()
+  const { threats, refreshThreats, isConnected, deleteThreat, clearAllThreats } = useRealtime()
   const [refreshing, setRefreshing] = useState(false)
+  const [clearing, setClearing] = useState(false)
   const [search, setSearch] = useState('')
   const [riskFilter, setRiskFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
@@ -16,6 +17,20 @@ export default function Threats() {
     setRefreshing(true)
     await refreshThreats()
     setRefreshing(false)
+  }
+
+  const handleDeleteThreat = async (id: string) => {
+    if (window.confirm('Are you sure you want to remove this threat record?')) {
+      await deleteThreat(id)
+    }
+  }
+
+  const handleClearAll = async () => {
+    if (window.confirm('Are you sure you want to clear all threat records from the feed?')) {
+      setClearing(true)
+      await clearAllThreats()
+      setClearing(false)
+    }
   }
 
   const filteredThreats = useMemo(() => {
@@ -50,10 +65,22 @@ export default function Threats() {
             </span>
           </div>
 
+          {threats.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              disabled={clearing}
+              title="Clear all recorded threats"
+              className="flex items-center gap-1.5 bg-white hover:bg-red-50 hover:text-red-700 hover:border-red-200 border border-slate-200 text-slate-600 px-3 py-1.5 rounded-xl text-xs transition shadow-xs font-medium cursor-pointer"
+            >
+              <Trash2 size={13} className="text-red-500" />
+              {clearing ? 'Clearing...' : 'Clear Feed'}
+            </button>
+          )}
+
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs transition shadow-xs font-medium"
+            className="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs transition shadow-xs font-medium cursor-pointer"
           >
             <RefreshCw size={14} className={refreshing ? 'animate-spin text-blue-600' : ''} />
             Refresh
@@ -72,7 +99,7 @@ export default function Threats() {
 
       {filteredThreats.length > 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <ThreatTable threats={filteredThreats} />
+          <ThreatTable threats={filteredThreats} onDelete={handleDeleteThreat} />
         </div>
       ) : (
         <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500 space-y-2 shadow-sm">
