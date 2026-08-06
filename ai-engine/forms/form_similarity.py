@@ -80,8 +80,10 @@ def compute_form_similarity(
     password_score = 80.0 if has_password else 20.0
     scores.append(("has_password", password_score, 0.15))
 
-    # ── 5. External form action — HARD PENALTY ───────────────
-    # This is the strongest phishing signal
+    # ── 5. External form action — context-dependent penalty ────
+    # This is only a strong phishing signal when the form ALSO contains
+    # credential fields (password inputs).  A marketing/newsletter form
+    # submitting to HubSpot, Mailchimp, etc. is NOT credential theft.
     if candidate_form_fp.get("has_external_action", False):
         external_domains = candidate_form_fp.get("external_action_domains", [])
 
@@ -92,12 +94,21 @@ def compute_form_similarity(
         )
 
         if not is_submitting_to_twin:
-            # Strong phishing indicator: form submits to unknown server
-            scores.append(("external_action", 100.0, 0.35))
-            for d in external_domains:
-                red_flags.append(f"Credential Submission Redirected to Unknown Server ({d})")
+            if has_password:
+                # HARD phishing indicator: login form submitting credentials to unknown server
+                scores.append(("external_action", 100.0, 0.35))
+                for d in external_domains:
+                    red_flags.append(f"Credential Submission Redirected to Unknown Server ({d})")
+            else:
+                # Non-credential form with external action — low concern
+                # (newsletter signups, contact forms, etc.)
+                scores.append(("external_action", 40.0, 0.35))
         else:
             scores.append(("external_action", 30.0, 0.35))
+    elif candidate_form_fp.get("has_safe_external_action", False):
+        # Forms submit to known safe SaaS providers (HubSpot, Mailchimp, etc.)
+        # Not a phishing indicator at all
+        scores.append(("external_action", 20.0, 0.35))
     else:
         scores.append(("external_action", 50.0, 0.35))
 
