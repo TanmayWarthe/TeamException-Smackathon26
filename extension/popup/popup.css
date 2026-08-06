@@ -1,4 +1,6 @@
-/* popup/popup.css — Clean white theme */
+/* popup/popup.css — Elegant, refined white theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 *, *::before, *::after {
   margin: 0;
   padding: 0;
@@ -7,78 +9,83 @@
 
 body {
   width: 340px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #fafafa;
   color: #111827;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #ctip-popup {
   display: flex;
   flex-direction: column;
+  background: #fafafa;
 }
 
 /* ── Header ── */
 .ctip-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-bottom: 1px solid #e5e7eb;
+  gap: 11px;
+  padding: 15px 18px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .ctip-logo-icon {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  background: #111827;
-  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  background: #18181b;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .ctip-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  color: #111827;
-  letter-spacing: -0.01em;
+  color: #18181b;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .ctip-subtitle {
-  font-size: 11px;
-  color: #6b7280;
+  font-size: 10.5px;
+  color: #a1a1aa;
   font-weight: 400;
   margin-top: 1px;
+  letter-spacing: 0.01em;
 }
 
 /* ── Domain Section ── */
 .ctip-domain-section {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  padding: 11px 18px;
+  background: #ffffff;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .ctip-section-label {
-  font-size: 10px;
+  font-size: 9.5px;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: #9ca3af;
+  letter-spacing: 0.9px;
+  color: #a1a1aa;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .ctip-domain {
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: #18181b;
   word-break: break-all;
+  line-height: 1.3;
 }
 
 .ctip-url {
-  font-size: 11px;
-  color: #9ca3af;
-  word-break: break-all;
+  font-size: 10.5px;
+  color: #a1a1aa;
   margin-top: 1px;
   white-space: nowrap;
   overflow: hidden;
@@ -87,42 +94,59 @@ body {
 
 /* ── Risk Section ── */
 .ctip-risk-section {
-  padding: 20px 16px;
+  padding: 20px 18px 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  background: #fafafa;
+  flex: 1;
 }
 
 /* Score pill */
 .risk-score-pill {
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
+  align-items: baseline;
+  gap: 3px;
+  padding: 9px 22px;
   border-radius: 100px;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
-  margin-bottom: 10px;
-  border: 1.5px solid;
+  margin-bottom: 9px;
+  border: 1px solid;
+  letter-spacing: -0.02em;
 }
 
-.risk-label {
+.risk-score-unit {
   font-size: 13px;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.risk-label-text {
+  font-size: 12px;
   font-weight: 600;
-  color: #374151;
-  margin-bottom: 6px;
+  color: #52525b;
+  margin-bottom: 5px;
+  letter-spacing: -0.01em;
 }
 
 .risk-recommendation-tag {
   display: inline-block;
   font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+  font-weight: 600;
   padding: 3px 10px;
-  border-radius: 4px;
-  margin-bottom: 14px;
+  border-radius: 5px;
+  margin-bottom: 16px;
+  letter-spacing: 0.02em;
+}
+
+/* Divider */
+.ctip-divider {
+  width: 100%;
+  height: 1px;
+  background: #f0f0f0;
+  margin-bottom: 13px;
 }
 
 /* Reasons */
@@ -130,92 +154,111 @@ body {
   list-style: none;
   width: 100%;
   text-align: left;
-  border-top: 1px solid #e5e7eb;
-  padding-top: 12px;
-  margin-top: 4px;
 }
 
 .risk-reasons li {
-  padding: 5px 0;
-  font-size: 12px;
-  color: #4b5563;
+  padding: 4px 0;
+  font-size: 11.5px;
+  color: #71717a;
   display: flex;
   align-items: flex-start;
-  gap: 7px;
+  gap: 8px;
+  line-height: 1.4;
 }
 
-.risk-reasons li::before {
-  content: '—';
-  color: #d1d5db;
+.risk-reason-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #d4d4d8;
   flex-shrink: 0;
-  font-size: 11px;
+  margin-top: 5px;
 }
 
-/* Scan button */
-.ctip-scan-btn {
+/* Buttons */
+.ctip-actions {
+  display: flex;
+  gap: 7px;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.ctip-btn {
+  flex: 1;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: #111827;
-  color: #ffffff;
+  justify-content: center;
   border: none;
   border-radius: 7px;
-  padding: 8px 16px;
-  font-size: 12px;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease;
-  margin-top: 4px;
+  transition: all 0.15s ease;
+  letter-spacing: -0.01em;
 }
 
-.ctip-scan-btn:hover {
-  background: #1f2937;
+.ctip-btn-primary {
+  background: #18181b;
+  color: #ffffff;
 }
 
-.ctip-scan-btn:disabled {
-  background: #e5e7eb;
-  color: #9ca3af;
-  cursor: not-allowed;
+.ctip-btn-primary:hover {
+  background: #27272a;
 }
 
-.ctip-scan-btn.secondary {
-  background: #f3f4f6;
-  color: #374151;
+.ctip-btn-secondary {
+  background: #f4f4f5;
+  color: #52525b;
+  border: 1px solid #e4e4e7;
 }
 
-.ctip-scan-btn.secondary:hover {
-  background: #e5e7eb;
+.ctip-btn-secondary:hover {
+  background: #e4e4e7;
 }
 
-/* Neutral/empty state */
+/* Neutral / empty state */
 .ctip-neutral {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 12px 0;
-  color: #9ca3af;
+  gap: 7px;
+  padding: 10px 0;
+}
+
+.ctip-neutral-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f4f4f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 3px;
 }
 
 .ctip-neutral-text {
   font-size: 13px;
-  color: #374151;
+  color: #18181b;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .ctip-neutral-hint {
   font-size: 11px;
-  color: #9ca3af;
+  color: #a1a1aa;
+  line-height: 1.4;
 }
 
 /* Spinner */
 .ctip-spinner {
-  width: 28px;
-  height: 28px;
-  border: 2px solid #e5e7eb;
-  border-top-color: #111827;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e4e4e7;
+  border-top-color: #18181b;
   border-radius: 50%;
-  animation: ctip-spin 0.7s linear infinite;
+  animation: ctip-spin 0.65s linear infinite;
 }
 
 @keyframes ctip-spin {
@@ -224,9 +267,11 @@ body {
 
 /* ── Footer ── */
 .ctip-footer {
-  padding: 10px 16px;
+  padding: 9px 18px;
   text-align: center;
   font-size: 10px;
-  color: #d1d5db;
-  border-top: 1px solid #e5e7eb;
+  color: #d4d4d8;
+  border-top: 1px solid #f0f0f0;
+  background: #ffffff;
+  letter-spacing: 0.01em;
 }
