@@ -20,20 +20,20 @@ export default function ThreatFilters({
   return (
     <div className="flex items-center gap-3">
       <div className="relative flex-1 max-w-xs">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search by domain..."
-          className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+          className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 transition"
         />
       </div>
 
       <select
         value={riskFilter}
         onChange={(e) => onRiskFilterChange(e.target.value)}
-        className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+        className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 transition"
       >
         <option value="ALL">All Risk Levels</option>
         <option value="CRITICAL">Critical (91-100)</option>
@@ -46,7 +46,7 @@ export default function ThreatFilters({
       <select
         value={statusFilter}
         onChange={(e) => onStatusFilterChange(e.target.value)}
-        className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+        className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 transition"
       >
         <option value="ALL">All Status</option>
         <option value="ACTIVE">Active</option>
