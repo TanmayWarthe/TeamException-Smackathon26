@@ -145,8 +145,8 @@ async def test_phishing_scoring_bug_report():
 async def test_official_safe_page_scoring():
     # Verify official domain page is recognized as safe and allowed
     safe_payload = {
-        "url": "https://erp.ycce.edu.in",
-        "html": "<html><head><title>YCCE ERP</title></head><body><h1>Welcome to YCCE ERP Portal</h1></body></html>",
+        "url": "https://ycce.edu",
+        "html": "<html><head><title>YCCE Official Website</title></head><body><h1>Welcome to YCCE</h1></body></html>",
     }
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         res = await ac.post("/api/analyze", json=safe_payload)
@@ -199,7 +199,7 @@ async def test_reason_consistency_on_elevated_risk():
     assert any("visual" in r.lower() or "structural" in r.lower() or "dom" in r.lower() for r in reasons)
 
     # 2. Truly safe score on official domain
-    safe_fused = {"_metadata": {"candidate_domain": "erp.ycce.edu.in", "twin_domain": "erp.ycce.edu.in"}}
+    safe_fused = {"_metadata": {"candidate_domain": "ycce.edu", "twin_domain": "ycce.edu"}}
     safe_contribs = {}
     safe_reasons = generate_reasons(safe_fused, safe_contribs, red_flags=[], risk_score=5.0)
     assert any("Verified official domain" in r for r in safe_reasons)
