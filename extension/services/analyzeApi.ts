@@ -16,6 +16,16 @@ const SAFE_DOMAINS = new Set([
   'amazon.com', 'www.amazon.com',
   'linkedin.com', 'www.linkedin.com',
   'reddit.com', 'www.reddit.com',
+  // Coding & Learning Platforms
+  'geeksforgeeks.org', 'www.geeksforgeeks.org', 'practice.geeksforgeeks.org',
+  'leetcode.com', 'www.leetcode.com',
+  'hackerrank.com', 'www.hackerrank.com',
+  'codechef.com', 'www.codechef.com',
+  'w3schools.com', 'www.w3schools.com',
+  'developer.mozilla.org',
+  'medium.com', 'www.medium.com',
+  'kaggle.com', 'www.kaggle.com',
+  'openai.com', 'chatgpt.com',
   // Official Campus Domains
   'ycce.edu', 'www.ycce.edu',
   'ycce.edu.in', 'www.ycce.edu.in',
