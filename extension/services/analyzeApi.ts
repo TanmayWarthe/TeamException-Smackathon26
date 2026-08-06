@@ -76,7 +76,7 @@ export async function analyzeSite(payload: CandidateWebsite): Promise<AnalysisRe
         confidence: 100,
         recommendation: 'ALLOW',
         source: 'backend' as const,
-        reasons: ['CTIP SOC Management Console / Internal Service'],
+        reasons: ['Internal Development / Local Application'],
       };
     }
   } catch {
