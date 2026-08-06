@@ -39,6 +39,8 @@ export interface AnalysisResult {
   recommendation: RecommendationAction;
   /** Short human-readable reasons explaining the score */
   reasons: string[];
+  /** Matched campus digital twin if detected */
+  matched_twin?: string;
   /**
    * Origin of this result:
    *   'backend'  — verified by the real /api/analyze endpoint
