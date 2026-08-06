@@ -175,12 +175,12 @@ def _levenshtein(s1: str, s2: str) -> int:
 
 # ── Standalone test ───────────────────────────────────────────
 if __name__ == "__main__":
-    official = "erp.ycce.edu.in"
+    official = "ycce.edu"
 
     tests = [
-        ("https://erp.ycce.edu.in/login", "Exact match"),
-        ("https://erp.ycce.edu.xyz/login", "Suspicious TLD"),
-        ("https://erp-ycce-edu.site/login", "Typosquat + bad TLD"),
+        ("https://ycce.edu/login", "Exact match"),
+        ("https://ycce.edu.xyz/login", "Suspicious TLD"),
+        ("https://ycce-edu.site/login", "Typosquat + bad TLD"),
         ("https://ycce-login.evil.com/login", "Brand embedded"),
         ("https://github.com/login", "Unrelated site"),
     ]
