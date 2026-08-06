@@ -190,8 +190,8 @@ export default function ThreatDetails() {
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 h-52 flex flex-col justify-between">
             <div className="space-y-1 text-xs">
-              <p className="text-slate-600">Captured DOM Title: <strong className="text-slate-900">YCCE Student Login - ERP</strong></p>
-              <p className="text-slate-600">Action Endpoint: <strong className="text-red-600">https://{threat.domain}/auth/capture.php</strong></p>
+              <p className="text-slate-600">Captured DOM Title: <strong className="text-slate-900">{threat.evidence?.dom_title || threat.domain}</strong></p>
+              <p className="text-slate-600">Action Endpoint: <strong className="text-red-600">{threat.evidence?.action_endpoint || threat.url}</strong></p>
             </div>
             <div className="bg-white rounded-lg p-3 border border-slate-200 text-[11px] text-slate-600">
               Screenshot Evidence: {threat.screenshot_path || `evidence/${threat.domain}.png`}
@@ -206,7 +206,7 @@ export default function ThreatDetails() {
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 h-52 flex flex-col justify-between">
             <div className="space-y-1 text-xs">
-              <p className="text-slate-600">Baseline Domain: <strong className="text-emerald-700">erp.ycce.edu.in</strong></p>
+              <p className="text-slate-600">Baseline Domain: <strong className="text-emerald-700">{threat.matched_twin?.domain || 'erp.ycce.edu.in'}</strong></p>
               <p className="text-slate-600">Fingerprint Status: <strong className="text-slate-900">Verified Hash Fingerprint</strong></p>
             </div>
             <div className="bg-white rounded-lg p-3 border border-slate-200 text-[11px] text-slate-600">
