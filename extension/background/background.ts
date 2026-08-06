@@ -110,7 +110,7 @@ async function handleLoginDetected(
 
 // ── Notify Content Script (for warning banner injection) ─────
 function notifyContentScript(tabId: number, result: AnalysisResult): void {
-  if (result.risk_score <= 70) return;
+  if (result.risk_score <= 50) return;
 
   chrome.tabs.sendMessage(tabId, {
     type: 'ANALYSIS_RESULT',
