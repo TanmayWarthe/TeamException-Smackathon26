@@ -67,13 +67,13 @@ export default function DashboardLayout() {
 
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col p-4">
-        <div className="flex items-center gap-2 mb-8 px-2">
-          <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shadow-inner">
-            <Shield className="text-cyan-400" size={20} />
+        <div className="flex items-center gap-2.5 mb-8 px-2">
+          <div className="w-8 h-8 rounded-xl bg-indigo-500/15 flex items-center justify-center">
+            <Shield className="text-indigo-400" size={18} />
           </div>
           <div>
-            <h2 className="text-white font-bold text-lg tracking-tight">CTIP Shield</h2>
-            <p className="text-slate-500 text-[10px] uppercase font-mono tracking-wider">Campus Intel</p>
+            <h2 className="text-white font-bold text-base tracking-tight">CTIP</h2>
+            <p className="text-slate-500 text-[10px] uppercase tracking-widest font-mono">Campus Intel</p>
           </div>
         </div>
 
@@ -84,10 +84,10 @@ export default function DashboardLayout() {
               <Link
                 key={path}
                 to={path}
-                className={`flex items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition duration-150 ${
+                className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
                   active
-                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+                    ? 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20'
+                    : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
                 }`}
               >
                 <span className="flex items-center gap-3">
@@ -105,33 +105,22 @@ export default function DashboardLayout() {
         </nav>
 
         {/* Real-time Status Widget */}
-        <div className="my-4 p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs">
+        <div className="my-4 p-3 rounded-xl bg-slate-950/40 border border-slate-800/60 text-xs">
           <div className="flex items-center justify-between">
-            <span className="text-slate-400 font-medium flex items-center gap-1.5">
-              {isConnected ? (
-                <>
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
-                  Live Intel Stream
-                </>
-              ) : (
-                <>
-                  <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                  Reconnecting...
-                </>
-              )}
+            <span className={`font-medium flex items-center gap-1.5 ${
+              isConnected ? 'text-emerald-400' : 'text-amber-400'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+              }`} />
+              {isConnected ? 'Live stream' : 'Reconnecting…'}
             </span>
             {isConnected ? (
-              <Wifi size={14} className="text-emerald-400" />
+              <Wifi size={13} className="text-emerald-400" />
             ) : (
-              <WifiOff size={14} className="text-amber-400 animate-pulse" />
+              <WifiOff size={13} className="text-amber-400 animate-pulse" />
             )}
           </div>
-          <p className="text-slate-500 text-[11px] mt-1">
-            {isConnected ? 'WebSocket feed active' : 'Checking socket /ws/alerts'}
-          </p>
         </div>
 
         <button
@@ -176,8 +165,8 @@ export default function DashboardLayout() {
               </div>
               <button
                 onClick={handleLogout}
-                className="ml-2 p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-950/40 border border-transparent hover:border-red-500/30 rounded-lg transition"
-                title="Sign Out of SOC Portal"
+                className="ml-2 p-1.5 text-slate-500 hover:text-red-400 rounded-lg transition"
+                title="Sign out"
               >
                 <LogOut size={16} />
               </button>

@@ -63,3 +63,6 @@ digital-twin/storage/embeddings/candidate_*
 # project pdfs
 
 *.pdf
+
+# Local working notes
+HOW_IT_WORKS.txt
