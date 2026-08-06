@@ -74,14 +74,14 @@ export default function Dashboard() {
             Campus threat intelligence — real-time analysis &amp; digital twin monitoring
           </p>
         </div>
-        <div className={`flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border ${
+        {/* <div className={`flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full border ${
           isConnected
             ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
             : 'bg-amber-50 border-amber-200 text-amber-700'
         }`}>
           <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
           {isConnected ? 'Live feed active' : 'Reconnecting…'}
-        </div>
+        </div> */}
       </div>
 
       {/* KPI Cards */}
