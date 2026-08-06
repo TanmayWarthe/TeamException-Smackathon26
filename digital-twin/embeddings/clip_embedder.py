@@ -16,6 +16,7 @@ from typing import Optional
 
 os.environ["PYTHONHTTPSVERIFY"] = "0"
 os.environ["CURL_CA_BUNDLE"] = ""
+os.environ["REQUESTS_CA_BUNDLE"] = ""
 try:
     ssl._create_default_https_context = ssl._create_unverified_context
 except Exception:

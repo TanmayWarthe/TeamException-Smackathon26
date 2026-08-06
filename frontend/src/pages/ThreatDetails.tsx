@@ -241,11 +241,20 @@ export default function ThreatDetails() {
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 h-52 flex flex-col justify-between">
             <div className="space-y-1 text-xs">
-              <p className="text-slate-600">Baseline Domain: <strong className="text-emerald-700">{threat.matched_twin?.domain || (threat.targeted_portal && threat.targeted_portal.includes('.') && !threat.targeted_portal.includes(' ') ? threat.targeted_portal : 'ycce.edu')}</strong></p>
-              <p className="text-slate-600">Baseline Name: <strong className="text-slate-900">{threat.matched_twin?.website_name || (threat.targeted_portal && !threat.targeted_portal.startsWith('Campus ') ? threat.targeted_portal : 'YCCE Official Portal')}</strong></p>
+              <p className="text-slate-600">Baseline Domain: <strong className="text-emerald-700">{
+                threat.matched_twin?.domain ||
+                (threat.matched_twin?.official_url ? new URL(threat.matched_twin.official_url).hostname : '') ||
+                (threat.targeted_portal && threat.targeted_portal.includes('.') && !threat.targeted_portal.includes(' ') ? threat.targeted_portal : '') ||
+                'Unregistered Digital Twin'
+              }</strong></p>
+              <p className="text-slate-600">Baseline Name: <strong className="text-slate-900">{
+                threat.matched_twin?.website_name ||
+                threat.targeted_portal ||
+                'Unregistered Digital Twin'
+              }</strong></p>
             </div>
             <div className="bg-white rounded-lg p-3 border border-slate-200 text-[11px] text-slate-600">
-              Screenshot Baseline: {threat.official_screenshot_path || (threat.matched_twin?.domain ? `evidence/${threat.matched_twin.domain}_baseline.png` : 'evidence/baseline.png')}
+              Screenshot Baseline: {threat.official_screenshot_path || (threat.matched_twin?.domain ? `evidence/${threat.matched_twin.domain}_baseline.png` : 'Not Available')}
             </div>
           </div>
         </div>

@@ -40,17 +40,23 @@ async def get_threat_detail(id: str, db: AsyncSession = Depends(get_db)):
 
     detected_str = t.detected_at.isoformat() if t.detected_at else datetime.now(timezone.utc).isoformat()
 
-    # Look up matched digital twin dynamically
+    # Look up matched digital twin dynamically from DB
     twin_result = await db.execute(
         select(DigitalTwinModel).where(
             (DigitalTwinModel.website_name == t.targeted_portal) |
-            (DigitalTwinModel.domain == t.targeted_portal)
+            (DigitalTwinModel.domain == t.targeted_portal) |
+            (DigitalTwinModel.official_url.like(f"%{t.targeted_portal}%")) |
+            (DigitalTwinModel.domain == t.domain)
         )
     )
     twin = twin_result.scalars().first()
-    if not twin:
-        # Fallback to first available digital twin
-        any_twin_res = await db.execute(select(DigitalTwinModel).order_by(DigitalTwinModel.created_at.asc()))
+    if not twin and t.targeted_portal:
+        any_twin_res = await db.execute(
+            select(DigitalTwinModel).where(
+                DigitalTwinModel.website_name.ilike(f"%{t.targeted_portal}%") |
+                DigitalTwinModel.domain.ilike(f"%{t.targeted_portal}%")
+            )
+        )
         twin = any_twin_res.scalars().first()
 
     matched_twin = None
@@ -61,12 +67,11 @@ async def get_threat_detail(id: str, db: AsyncSession = Depends(get_db)):
             "official_url": twin.official_url,
         }
     elif t.targeted_portal:
-        fallback_domain = t.targeted_portal if "." in t.targeted_portal else "ycce.edu"
-
+        clean_domain = t.targeted_portal if ("." in t.targeted_portal and " " not in t.targeted_portal) else t.domain
         matched_twin = {
             "website_name": t.targeted_portal,
-            "domain": fallback_domain,
-            "official_url": f"https://{fallback_domain}",
+            "domain": clean_domain,
+            "official_url": f"https://{clean_domain}" if not clean_domain.startswith("http") else clean_domain,
         }
         
     return ThreatDetailResponse(
