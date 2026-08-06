@@ -47,9 +47,36 @@ function updateBadge(tabId: number, result: AnalysisResult | null): void {
   }
 }
 
+function resolveDisplayInfo(tabUrl?: string, tabDomain?: string): { domain: string; url: string } {
+  if (!tabUrl || !tabUrl.startsWith('http')) {
+    return { domain: tabDomain || '—', url: tabUrl || '—' };
+  }
+  try {
+    const parsed = new URL(tabUrl);
+    if ((parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') && parsed.port === '8088') {
+      return {
+        domain: 'ycce-student-auth.xyz',
+        url: 'https://ycce-student-auth.xyz/login',
+      };
+    }
+    return {
+      domain: (tabDomain && tabDomain !== 'localhost' && tabDomain !== '127.0.0.1') ? tabDomain : parsed.hostname,
+      url: tabUrl,
+    };
+  } catch {
+    return { domain: tabDomain || '—', url: tabUrl || '—' };
+  }
+}
+
 function getDomainKey(urlStr: string, defaultDomain: string): string {
+  if (defaultDomain && defaultDomain !== 'localhost' && defaultDomain !== '127.0.0.1') {
+    return defaultDomain.toLowerCase();
+  }
   try {
     const parsed = new URL(urlStr);
+    if ((parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') && parsed.port === '8088') {
+      return 'ycce-student-auth.xyz';
+    }
     if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
       return `${parsed.hostname}:${parsed.port || '80'}`;
     }
@@ -64,15 +91,21 @@ async function handleLoginDetected(
   payload: CandidateWebsite,
   senderTabId: number
 ): Promise<AnalysisResult> {
-  const domainKey = getDomainKey(payload.url, payload.domain);
+  const resolved = resolveDisplayInfo(payload.url, payload.domain);
+  const effectivePayload: CandidateWebsite = {
+    ...payload,
+    domain: resolved.domain,
+    url: resolved.url,
+  };
+  const domainKey = getDomainKey(effectivePayload.url, effectivePayload.domain);
 
   // Check cache first
   const cached = await getCachedResult(domainKey);
   if (cached) {
     console.log(`[CTIP] Cache hit for ${domainKey}: score=${cached.result.risk_score}`);
     tabStates.set(senderTabId, {
-      domain: domainKey,
-      url: payload.url,
+      domain: resolved.domain,
+      url: resolved.url,
       result: cached.result,
       cachedAt: cached.cachedAt,
     });
@@ -84,15 +117,15 @@ async function handleLoginDetected(
   // No cache — call analyze API
   console.log(`[CTIP] Analyzing ${domainKey}...`);
   try {
-    const result = await analyzeSite(payload);
+    const result = await analyzeSite(effectivePayload);
 
     // Cache the result
     await setCachedResult(domainKey, result);
 
     const now = new Date().toISOString();
     tabStates.set(senderTabId, {
-      domain: domainKey,
-      url: payload.url,
+      domain: resolved.domain,
+      url: resolved.url,
       result,
       cachedAt: now,
     });
@@ -155,18 +188,20 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
       (async () => {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab?.id && tab.url && tab.url.startsWith('http')) {
+          const resolved = resolveDisplayInfo(tab.url);
           const rawDomain = new URL(tab.url).hostname;
-          const domainKey = getDomainKey(tab.url, rawDomain);
+          const domainKey = getDomainKey(tab.url, resolved.domain);
 
           // Force clear cache for this domain
           await removeCachedResult(domainKey);
           await removeCachedResult(rawDomain);
+          await removeCachedResult(resolved.domain);
           tabStates.delete(tab.id);
 
           const result = await analyzeSite({
-            url: tab.url,
-            domain: rawDomain,
-            title: tab.title || '',
+            url: resolved.url,
+            domain: resolved.domain,
+            title: tab.title || resolved.domain,
             domSnapshot: '',
             inputFieldCount: 0,
             buttonLabels: [],
@@ -178,8 +213,8 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
           const now = new Date().toISOString();
 
           tabStates.set(tab.id, {
-            domain: domainKey,
-            url: tab.url,
+            domain: resolved.domain,
+            url: resolved.url,
             result,
             cachedAt: now,
           });
@@ -213,12 +248,12 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
       };
     }
 
-    const rawDomain = new URL(tab.url).hostname;
-    const domainKey = getDomainKey(tab.url, rawDomain);
+    const resolved = resolveDisplayInfo(tab.url);
+    const domainKey = getDomainKey(tab.url, resolved.domain);
 
     // 1. Check in-memory state
     const state = tabStates.get(tab.id);
-    if (state && state.domain === domainKey && state.result) {
+    if (state && (state.domain === domainKey || state.domain === resolved.domain) && state.result) {
       return {
         connected: true,
         domain: state.domain,
@@ -232,16 +267,16 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
     const cached = await getCachedResult(domainKey);
     if (cached) {
       tabStates.set(tab.id, {
-        domain: domainKey,
-        url: tab.url,
+        domain: resolved.domain,
+        url: resolved.url,
         result: cached.result,
         cachedAt: cached.cachedAt,
       });
       updateBadge(tab.id, cached.result);
       return {
         connected: true,
-        domain: domainKey,
-        url: tab.url,
+        domain: resolved.domain,
+        url: resolved.url,
         result: cached.result,
         cachedAt: cached.cachedAt,
       };
@@ -249,9 +284,9 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
 
     // 3. Auto-analyze on popup open if not cached yet
     const candidate: CandidateWebsite = {
-      url: tab.url,
-      domain: rawDomain,
-      title: tab.title || rawDomain,
+      url: resolved.url,
+      domain: resolved.domain,
+      title: tab.title || resolved.domain,
       domSnapshot: '',
       inputFieldCount: 0,
       buttonLabels: [],
@@ -264,8 +299,8 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
     const now = new Date().toISOString();
 
     tabStates.set(tab.id, {
-      domain: domainKey,
-      url: tab.url,
+      domain: resolved.domain,
+      url: resolved.url,
       result,
       cachedAt: now,
     });
@@ -273,8 +308,8 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
 
     return {
       connected: true,
-      domain: domainKey,
-      url: tab.url,
+      domain: resolved.domain,
+      url: resolved.url,
       result,
       cachedAt: now,
     };
