@@ -99,9 +99,9 @@ async function handleLoginDetected(
   };
   const domainKey = getDomainKey(effectivePayload.url, effectivePayload.domain);
 
-  // Check cache first
+  // Check cache first (ignore 0-score cache for non-institutional domains)
   const cached = await getCachedResult(domainKey);
-  if (cached) {
+  if (cached && (cached.result.risk_score > 0 || domainKey.includes('ycce.edu'))) {
     console.log(`[CTIP] Cache hit for ${domainKey}: score=${cached.result.risk_score}`);
     tabStates.set(senderTabId, {
       domain: resolved.domain,
@@ -253,7 +253,7 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
 
     // 1. Check in-memory state
     const state = tabStates.get(tab.id);
-    if (state && (state.domain === domainKey || state.domain === resolved.domain) && state.result) {
+    if (state && (state.domain === domainKey || state.domain === resolved.domain) && state.result && (state.result.risk_score > 0 || domainKey.includes('ycce.edu'))) {
       return {
         connected: true,
         domain: state.domain,
@@ -265,7 +265,7 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
 
     // 2. Check storage cache
     const cached = await getCachedResult(domainKey);
-    if (cached) {
+    if (cached && (cached.result.risk_score > 0 || domainKey.includes('ycce.edu'))) {
       tabStates.set(tab.id, {
         domain: resolved.domain,
         url: resolved.url,
@@ -340,11 +340,11 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
       const domain = new URL(tab.url).hostname;
       const domainKey = getDomainKey(tab.url, domain);
       const state = tabStates.get(activeInfo.tabId);
-      if (state?.result && state.domain === domainKey) {
+      if (state?.result && state.domain === domainKey && (state.result.risk_score > 0 || domainKey.includes('ycce.edu'))) {
         updateBadge(activeInfo.tabId, state.result);
       } else {
         const cached = await getCachedResult(domainKey);
-        if (cached) {
+        if (cached && (cached.result.risk_score > 0 || domainKey.includes('ycce.edu'))) {
           tabStates.set(activeInfo.tabId, {
             domain: domainKey,
             url: tab.url,
