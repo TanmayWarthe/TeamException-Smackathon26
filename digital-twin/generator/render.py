@@ -52,66 +52,90 @@ async def render_page(url: str, screenshot_path: str | None = None) -> dict:
             "img_elements": [],
         }
 
-    async with async_playwright() as p:
-        browser: Browser = await p.chromium.launch(headless=BROWSER_HEADLESS)
-        context = await browser.new_context(
-            viewport=DEFAULT_VIEWPORT,
-            ignore_https_errors=True,  # some phishing sites have bad certs
-        )
-        page: Page = await context.new_page()
+    try:
+        async with async_playwright() as p:
+            browser: Browser = await p.chromium.launch(headless=BROWSER_HEADLESS)
+            context = await browser.new_context(
+                viewport=DEFAULT_VIEWPORT,
+                ignore_https_errors=True,  # some phishing sites have bad certs
+            )
+            page: Page = await context.new_page()
 
-        # Try domcontentloaded first (fast & reliable, avoids networkidle timeout on streaming sites like GitHub)
-        try:
-            await page.goto(url, wait_until="domcontentloaded", timeout=12000)
-        except Exception:
             try:
-                await page.goto(url, wait_until="commit", timeout=10000)
+                await page.goto(url, wait_until="domcontentloaded", timeout=25000)
             except Exception as e:
-                await browser.close()
-                raise RuntimeError(f"Failed to load {url}: {e}")
+                print(f"[Render] Playwright goto notice for {url}: {e}")
 
-        # Wait for JS rendering
-        await page.wait_for_timeout(RENDER_WAIT_MS)
+            # Wait briefly for JS rendering
+            try:
+                await page.wait_for_timeout(RENDER_WAIT_MS)
+            except Exception:
+                pass
 
-        # Capture screenshot
-        Path(screenshot_path).parent.mkdir(parents=True, exist_ok=True)
-        await page.screenshot(path=screenshot_path, full_page=True)
+            # Capture screenshot
+            Path(screenshot_path).parent.mkdir(parents=True, exist_ok=True)
+            try:
+                await page.screenshot(path=screenshot_path, full_page=True)
+            except Exception:
+                pass
 
-        # Get rendered HTML
-        html = await page.content()
+            # Get rendered HTML and title
+            try:
+                html = await page.content()
+                title = await page.title()
+            except Exception:
+                html = f"<html><head><title>{domain}</title></head><body><h1>{domain}</h1></body></html>"
+                title = domain
 
-        # Get page title
-        title = await page.title()
+            # Collect img element bounding boxes for logo detection
+            try:
+                img_elements = await page.evaluate("""
+                    () => {
+                        const imgs = document.querySelectorAll('img');
+                        return Array.from(imgs).map(img => {
+                            const rect = img.getBoundingClientRect();
+                            return {
+                                src: img.src || '',
+                                alt: img.alt || '',
+                                className: img.className || '',
+                                x: rect.x,
+                                y: rect.y,
+                                width: rect.width,
+                                height: rect.height,
+                            };
+                        });
+                    }
+                """)
+            except Exception:
+                img_elements = []
 
-        # Collect img element bounding boxes for logo detection
-        img_elements = await page.evaluate("""
-            () => {
-                const imgs = document.querySelectorAll('img');
-                return Array.from(imgs).map(img => {
-                    const rect = img.getBoundingClientRect();
-                    return {
-                        src: img.src || '',
-                        alt: img.alt || '',
-                        className: img.className || '',
-                        x: rect.x,
-                        y: rect.y,
-                        width: rect.width,
-                        height: rect.height,
-                    };
-                });
-            }
-        """)
+            await browser.close()
 
-        await browser.close()
+        return {
+            "url": url,
+            "domain": domain,
+            "html": html,
+            "screenshot_path": screenshot_path,
+            "title": title or domain,
+            "img_elements": img_elements,
+        }
+    except Exception as err:
+        print(f"[Render] Playwright failed completely for {url}: {err}. Falling back to HTTP GET.")
+        import requests
+        try:
+            resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0 CTIP Security Bot"})
+            html = resp.text
+        except Exception:
+            html = f"<html><head><title>{domain}</title></head><body><h1>{domain}</h1></body></html>"
 
-    return {
-        "url": url,
-        "domain": domain,
-        "html": html,
-        "screenshot_path": screenshot_path,
-        "title": title,
-        "img_elements": img_elements,
-    }
+        return {
+            "url": url,
+            "domain": domain,
+            "html": html,
+            "screenshot_path": screenshot_path,
+            "title": domain,
+            "img_elements": [],
+        }
 
 
 def render_page_sync(url: str, screenshot_path: str | None = None) -> dict:
