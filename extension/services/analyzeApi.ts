@@ -19,8 +19,7 @@ const SAFE_DOMAINS = new Set([
   // Official Campus Domains
   'ycce.edu', 'www.ycce.edu',
   'ycce.edu.in', 'www.ycce.edu.in',
-  'erp.ycce.edu.in', 'webmail.ycce.edu.in',
-  'student.ycce.edu.in', 'portal.ycce.edu.in',
+  'portal.ycce.edu', 'student.ycce.edu',
   'exam.ycce.edu.in', 'moodle.ycce.edu.in',
   'meghegroup.org', 'www.meghegroup.org',
   'nagpuruniversity.ac.in', 'www.nagpuruniversity.ac.in',
