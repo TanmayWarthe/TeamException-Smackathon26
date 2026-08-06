@@ -65,6 +65,14 @@ function detectAndReport(): void {
       (response) => {
         if (chrome.runtime.lastError) {
           console.debug('[CTIP] Worker status:', chrome.runtime.lastError.message);
+          return;
+        }
+        if (response?.result && typeof response.result.risk_score === 'number' && response.result.risk_score > 50) {
+          if (bannerState.injected && bannerState.source === 'fallback' && response.result.source === 'backend') {
+            updateWarningBanner(response.result);
+          } else if (!bannerState.injected) {
+            injectWarningBanner(response.result);
+          }
         }
       }
     );
