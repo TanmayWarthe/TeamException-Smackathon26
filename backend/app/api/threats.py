@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from ..database.session import get_db
-from ..models.entities import Threat
+from ..models.entities import Threat, DigitalTwinModel
 from ..schemas.schemas import ThreatListItem, ThreatDetailResponse, UpdateThreatStatusRequest
 from ..websocket.manager import ws_manager
 
@@ -39,21 +39,48 @@ async def get_threat_detail(id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Threat not found")
 
     detected_str = t.detected_at.isoformat() if t.detected_at else datetime.now(timezone.utc).isoformat()
+
+    # Look up matched digital twin dynamically
+    twin_result = await db.execute(
+        select(DigitalTwinModel).where(
+            (DigitalTwinModel.website_name == t.targeted_portal) |
+            (DigitalTwinModel.domain == t.targeted_portal)
+        )
+    )
+    twin = twin_result.scalars().first()
+    if not twin:
+        # Fallback to first available digital twin
+        any_twin_res = await db.execute(select(DigitalTwinModel).order_by(DigitalTwinModel.created_at.asc()))
+        twin = any_twin_res.scalars().first()
+
+    matched_twin = None
+    if twin:
+        matched_twin = {
+            "website_name": twin.website_name,
+            "domain": twin.domain,
+            "official_url": twin.official_url,
+        }
+    elif t.targeted_portal:
+        matched_twin = {
+            "website_name": t.targeted_portal,
+            "domain": t.targeted_portal if "." in t.targeted_portal else f"{t.targeted_portal.lower().replace(' ', '')}.ycce.edu.in",
+            "official_url": f"https://{t.targeted_portal}" if "." in t.targeted_portal else "https://erp.ycce.edu.in",
+        }
         
     return ThreatDetailResponse(
         id=t.id,
         url=t.url,
         domain=t.domain,
-        ip_address=t.ip_address or "Unassigned",
-        registrar=t.registrar or "Unknown Registrar",
-        ssl_status=t.ssl_status or "Unknown SSL State",
+        ip_address=t.ip_address or "Not available",
+        registrar=t.registrar or "Not available",
+        ssl_status=t.ssl_status or "No SSL Certificate (HTTP only)",
         risk_score=t.risk_score,
         confidence=t.confidence,
         threat_status=t.threat_status,
-        targeted_portal=t.targeted_portal,
+        targeted_portal=t.targeted_portal or (twin.website_name if twin else "Official Portal"),
         detected_at=detected_str,
         screenshot_path=t.screenshot_path or "",
-        official_screenshot_path=t.official_screenshot_path or "",
+        official_screenshot_path=t.official_screenshot_path or (twin.screenshot_path if twin else ""),
         similarity_report=t.similarity_report or {},
         risk_breakdown=t.risk_breakdown or [],
         explanation=t.explanation or {
@@ -66,6 +93,7 @@ async def get_threat_detail(id: str, db: AsyncSession = Depends(get_db)):
             {"time": detected_str, "label": f"Threat Detected and Scored ({t.risk_score}%)"}
         ],
         admin_notes=t.admin_notes or "",
+        matched_twin=matched_twin,
     )
 
 @router.post("/{id}/status")
@@ -84,3 +112,34 @@ async def update_threat_status(id: str, req: UpdateThreatStatusRequest, db: Asyn
     await ws_manager.broadcast_threat_status(id, req.status, req.notes)
 
     return {"message": "Threat status updated successfully", "id": id, "status": req.status}
+
+
+@router.delete("/{id}")
+async def delete_threat(id: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Threat).where(Threat.id == id))
+    t = result.scalar_one_or_none()
+    if not t:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Threat not found")
+        
+    await db.delete(t)
+    await db.commit()
+
+    await ws_manager.broadcast({
+        "type": "THREAT_DELETED",
+        "data": {"threat_id": id}
+    })
+
+    return {"message": "Threat deleted successfully", "id": id}
+
+
+@router.delete("")
+async def clear_all_threats(db: AsyncSession = Depends(get_db)):
+    await db.execute(delete(Threat))
+    await db.commit()
+
+    await ws_manager.broadcast({
+        "type": "THREATS_CLEARED",
+        "data": {}
+    })
+
+    return {"message": "All threats cleared successfully"}
