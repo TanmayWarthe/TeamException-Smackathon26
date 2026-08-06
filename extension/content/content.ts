@@ -4,7 +4,7 @@
 // a warning banner when instructed by the background worker.
 
 import { CandidateWebsite, AnalysisResult, ExtensionMessage, getRiskLevel } from '../shared/types';
-import { isLoginPage, collectFormMetadata } from '../utils/domHelpers';
+import { isLoginPage, collectFormMetadata, getEffectivePageInfo } from '../utils/domHelpers';
 
 // ── Risk colours (refined elegant theme) ────────────────────
 const BANNER_THEME: Record<string, { fg: string; bg: string; border: string; accent: string; label: string }> = {
@@ -43,14 +43,15 @@ function detectAndReport(): void {
 
   const isLogin = isLoginPage();
   const meta = collectFormMetadata();
+  const pageInfo = getEffectivePageInfo();
 
   if (reported && !isLogin) return;
   reported = true;
 
   const payload: CandidateWebsite = {
-    url: window.location.href,
-    domain: window.location.hostname,
-    title: document.title || window.location.hostname,
+    url: pageInfo.url,
+    domain: pageInfo.domain,
+    title: document.title || pageInfo.domain,
     domSnapshot: meta.domSnapshot || (document.documentElement ? document.documentElement.outerHTML.slice(0, 40000) : ''),
     inputFieldCount: meta.inputFieldCount,
     buttonLabels: meta.buttonLabels,
@@ -82,6 +83,8 @@ function injectWarningBanner(result: AnalysisResult): void {
   const level = getRiskLevel(result.risk_score);
   const theme = BANNER_THEME[level] ?? BANNER_THEME['HIGH'];
   const isFallback = result.source === 'fallback';
+  const pageInfo = getEffectivePageInfo();
+  const displayDomain = pageInfo.domain;
 
   const host = document.createElement('div');
   host.id = 'ctip-warning-host';
@@ -223,7 +226,7 @@ function injectWarningBanner(result: AnalysisResult): void {
           <span id="ctip-score-badge" class="ctip-level-tag">${theme.label} · ${result.risk_score}%</span>
           ${isFallback ? '<span id="ctip-verifying">Verifying…</span>' : ''}
         </p>
-        <p class="ctip-domain-text">${window.location.hostname}</p>
+        <p class="ctip-domain-text">${displayDomain}</p>
         <ul id="ctip-reasons" class="ctip-reasons">${reasons}</ul>
         <div class="ctip-actions">
           <button class="ctip-btn ctip-btn-leave" id="ctip-leave">Leave This Site</button>
