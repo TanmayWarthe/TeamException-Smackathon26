@@ -45,6 +45,9 @@ const INSTITUTIONAL_ROOTS = [
 function isKnownSafeOrInstitutionalDomain(domain: string): boolean {
   const d = domain.toLowerCase().trim();
   if (SAFE_DOMAINS.has(d)) return true;
+  for (const safe of SAFE_DOMAINS) {
+    if (d === safe || d.endsWith('.' + safe)) return true;
+  }
   for (const root of INSTITUTIONAL_ROOTS) {
     if (d === root || d.endsWith('.' + root)) return true;
   }
