@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
     # Mock data
     mock_twin = {
-        "domain": "erp.ycce.edu.in",
+        "domain": "ycce.edu",
         "visual_embedding": np.random.randn(512).astype(np.float32),
         "logo_embedding": np.random.randn(512).astype(np.float32),
         "dom_fingerprint": {
