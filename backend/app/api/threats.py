@@ -61,13 +61,7 @@ async def get_threat_detail(id: str, db: AsyncSession = Depends(get_db)):
             "official_url": twin.official_url,
         }
     elif t.targeted_portal:
-        portal_lower = t.targeted_portal.lower()
-        if "erp" in portal_lower:
-            fallback_domain = "erp.ycce.edu.in"
-        elif "." in t.targeted_portal:
-            fallback_domain = t.targeted_portal
-        else:
-            fallback_domain = "erp.ycce.edu.in"
+        fallback_domain = t.targeted_portal if "." in t.targeted_portal else "ycce.edu"
 
         matched_twin = {
             "website_name": t.targeted_portal,
