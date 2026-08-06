@@ -28,36 +28,36 @@ export default function DashboardLayout() {
       : location.pathname === path
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col md:flex-row text-slate-100">
+    <div className="h-screen overflow-hidden bg-slate-50 flex flex-col md:flex-row text-slate-900">
       {/* Toast Alert Banner */}
       {activeToast && (
         <div
-          className={`fixed top-4 right-4 z-50 max-w-md w-full p-4 rounded-xl border shadow-2xl backdrop-blur-md transition-all duration-300 transform translate-y-0 ${
+          className={`fixed top-4 right-4 z-50 max-w-md w-full p-4 rounded-xl border shadow-lg transition-all duration-300 transform translate-y-0 ${
             activeToast.severity === 'critical'
-              ? 'bg-red-950/90 border-red-500/50 text-red-100 shadow-red-950/50'
+              ? 'bg-red-50 border-red-200 text-red-900'
               : activeToast.severity === 'high'
-              ? 'bg-amber-950/90 border-amber-500/50 text-amber-100 shadow-amber-950/50'
-              : 'bg-cyan-950/90 border-cyan-500/50 text-cyan-100 shadow-cyan-950/50'
+                ? 'bg-amber-50 border-amber-200 text-amber-900'
+                : 'bg-blue-50 border-blue-200 text-blue-900'
           }`}
         >
           <div className="flex items-start gap-3">
             <AlertTriangle
               size={20}
-              className={`shrink-0 mt-0.5 animate-bounce ${
+              className={`shrink-0 mt-0.5 ${
                 activeToast.severity === 'critical'
-                  ? 'text-red-400'
+                  ? 'text-red-600'
                   : activeToast.severity === 'high'
-                  ? 'text-amber-400'
-                  : 'text-cyan-400'
+                    ? 'text-amber-600'
+                    : 'text-blue-600'
               }`}
             />
             <div className="flex-1">
-              <h4 className="font-bold text-sm tracking-wide">{activeToast.title}</h4>
+              <h4 className="font-bold text-sm tracking-tight">{activeToast.title}</h4>
               <p className="text-xs opacity-90 mt-1 leading-relaxed">{activeToast.message}</p>
             </div>
             <button
               onClick={dismissToast}
-              className="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10"
+              className="text-slate-400 hover:text-slate-700 transition p-1 rounded-lg hover:bg-slate-200/50"
             >
               <X size={16} />
             </button>
@@ -66,36 +66,36 @@ export default function DashboardLayout() {
       )}
 
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col p-4">
-        <div className="flex items-center gap-2.5 mb-8 px-2">
-          <div className="w-8 h-8 rounded-xl bg-indigo-500/15 flex items-center justify-center">
-            <Shield className="text-indigo-400" size={18} />
+      <aside className="w-full md:w-64 h-full bg-white border-r border-slate-200 flex flex-col p-4 shrink-0 z-30">
+        <div className="flex items-center gap-2.5 mb-6 px-2 shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+            <Shield className="text-blue-600" size={18} />
           </div>
           <div>
-            <h2 className="text-white font-bold text-base tracking-tight">CTIP</h2>
-            <p className="text-slate-500 text-[10px] uppercase tracking-widest font-mono">Campus Intel</p>
+            <h2 className="text-slate-900 font-bold text-base tracking-tight">CTIP</h2>
+            <p className="text-slate-500 text-xs font-medium">Campus Threat Intelligence</p>
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1.5">
+        <nav className="flex-1 space-y-1 overflow-y-auto min-h-0 pr-1">
           {navItems.map(({ path, label, icon: Icon }) => {
             const active = isActive(path)
             return (
               <Link
                 key={path}
                 to={path}
-                className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+                className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
                   active
-                    ? 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20'
-                    : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                    ? 'bg-blue-50 text-blue-600 font-semibold border border-blue-100'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent'
                 }`}
               >
                 <span className="flex items-center gap-3">
-                  <Icon size={18} className={active ? 'text-cyan-400' : 'text-slate-400'} />
+                  <Icon size={18} className={active ? 'text-blue-600' : 'text-slate-400'} />
                   {label}
                 </span>
                 {label === 'Notifications' && unreadCount > 0 && (
-                  <span className="bg-red-500 text-white text-[11px] font-bold rounded-full px-2 py-0.5 shadow-sm animate-pulse">
+                  <span className="bg-red-500 text-white text-[11px] font-bold rounded-full px-2 py-0.5 shadow-xs">
                     {unreadCount}
                   </span>
                 )}
@@ -104,39 +104,37 @@ export default function DashboardLayout() {
           })}
         </nav>
 
-        {/* Real-time Status Widget */}
-        <div className="my-4 p-3 rounded-xl bg-slate-950/40 border border-slate-800/60 text-xs">
-          <div className="flex items-center justify-between">
-            <span className={`font-medium flex items-center gap-1.5 ${
-              isConnected ? 'text-emerald-400' : 'text-amber-400'
-            }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${
-                isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
-              }`} />
-              {isConnected ? 'Live stream' : 'Reconnecting…'}
-            </span>
-            {isConnected ? (
-              <Wifi size={13} className="text-emerald-400" />
-            ) : (
-              <WifiOff size={13} className="text-amber-400 animate-pulse" />
-            )}
+        {/* Real-time Status Widget & Logout */}
+        <div className="mt-auto shrink-0 pt-3 space-y-2 border-t border-slate-100">
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+            <div className="flex items-center justify-between">
+              <span className={`font-medium flex items-center gap-1.5 ${isConnected ? 'text-emerald-700' : 'text-amber-700'}`}>
+                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                {isConnected ? 'Live stream connected' : 'Reconnecting…'}
+              </span>
+              {isConnected ? (
+                <Wifi size={13} className="text-emerald-600" />
+              ) : (
+                <WifiOff size={13} className="text-amber-600" />
+              )}
+            </div>
           </div>
-        </div>
 
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 text-slate-400 hover:text-red-400 px-3 py-2 text-sm rounded-xl hover:bg-slate-800/40 transition"
-        >
-          <LogOut size={18} /> Logout
-        </button>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 text-slate-500 hover:text-red-600 px-3 py-2 text-sm rounded-lg hover:bg-slate-50 transition font-medium"
+          >
+            <LogOut size={18} /> Logout
+          </button>
+        </div>
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Header */}
-        <header className="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-950/70 backdrop-blur sticky top-0 z-40">
+        <header className="h-16 shrink-0 border-b border-slate-200 flex items-center justify-between px-6 bg-white z-20">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono uppercase bg-slate-800/80 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60">
+            <span className="text-xs font-medium bg-slate-100 text-slate-700 px-3 py-1 rounded-full border border-slate-200">
               Institution: YCCE Campus
             </span>
           </div>
@@ -144,28 +142,27 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-4">
             <Link
               to="/notifications"
-              className="relative p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800/60 transition"
+              className="relative p-2 text-slate-500 hover:text-slate-900 rounded-xl hover:bg-slate-100 transition"
               title="Notifications"
             >
               <Bell size={20} />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                   {unreadCount}
                 </span>
               )}
             </Link>
-            
-            <div className="flex items-center gap-3 pl-3 border-l border-slate-800">
-              <div className="w-8 h-8 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-sm font-bold">
+
+            <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
+              <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 text-sm font-bold">
                 {user?.name?.[0] ?? 'A'}
               </div>
               <div className="text-sm hidden sm:block">
-                <p className="text-white font-medium leading-tight">{user?.name ?? 'SOC Administrator'}</p>
-                <p className="text-slate-500 text-xs leading-tight font-mono">{user?.email ?? 'admin@ycce.edu'}</p>
+                <p className="text-slate-900 font-medium leading-tight">{user?.name ?? 'Administrator'}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="ml-2 p-1.5 text-slate-500 hover:text-red-400 rounded-lg transition"
+                className="ml-2 p-1.5 text-slate-400 hover:text-red-600 rounded-lg transition"
                 title="Sign out"
               >
                 <LogOut size={16} />
@@ -174,7 +171,7 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-slate-950">
+        <main className="flex-1 overflow-y-auto bg-slate-50">
           <Outlet />
         </main>
       </div>
