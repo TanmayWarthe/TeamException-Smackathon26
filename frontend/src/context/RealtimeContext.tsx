@@ -18,8 +18,12 @@ export interface RealtimeContextType {
   dismissToast: () => void;
   refreshThreats: () => Promise<void>;
   refreshNotifications: () => Promise<void>;
+  deleteThreat: (id: string) => Promise<void>;
+  clearAllThreats: () => Promise<void>;
   markNotificationAsRead: (id: string) => Promise<void>;
   markAllNotificationsAsRead: () => Promise<void>;
+  deleteNotification: (id: string) => Promise<void>;
+  clearAllNotifications: () => Promise<void>;
   updateThreatStatusLocally: (id: string, status: Threat['threat_status']) => void;
 }
 
@@ -117,6 +121,16 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           break;
         }
 
+        case 'THREAT_DELETED': {
+          setThreats((prev) => prev.filter((t) => t.id !== data.threat_id));
+          break;
+        }
+
+        case 'THREATS_CLEARED': {
+          setThreats([]);
+          break;
+        }
+
         case 'NEW_NOTIFICATION': {
           const newNotif: AppNotification = {
             id: data.id || `notif_${Date.now()}`,
@@ -131,8 +145,12 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
 
         case 'NOTIFICATIONS_UPDATED': {
-          if (data.all_read) {
+          if (data.cleared_all) {
+            setNotifications([]);
+          } else if (data.all_read) {
             setNotifications((prev) => prev.map((n) => ({ ...n, read_status: true })));
+          } else if (data.notification_id && data.deleted) {
+            setNotifications((prev) => prev.filter((n) => n.id !== data.notification_id));
           } else if (data.notification_id) {
             setNotifications((prev) =>
               prev.map((n) => (n.id === data.notification_id ? { ...n, read_status: true } : n))
@@ -227,6 +245,26 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [connectWebSocket]);
 
+  const deleteThreat = async (id: string) => {
+    try {
+      setThreats((prev) => prev.filter((t) => t.id !== id));
+      await api.deleteThreat(id);
+    } catch (err) {
+      console.error('Failed to delete threat', err);
+      fetchThreats();
+    }
+  };
+
+  const clearAllThreats = async () => {
+    try {
+      setThreats([]);
+      await api.clearAllThreats();
+    } catch (err) {
+      console.error('Failed to clear all threats', err);
+      fetchThreats();
+    }
+  };
+
   const markNotificationAsRead = async (id: string) => {
     try {
       await api.markNotificationRead(id);
@@ -242,6 +280,26 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setNotifications((prev) => prev.map((n) => ({ ...n, read_status: true })));
     } catch (err) {
       console.error('Failed to mark all notifications as read', err);
+    }
+  };
+
+  const deleteNotification = async (id: string) => {
+    try {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      await api.deleteNotification(id);
+    } catch (err) {
+      console.error('Failed to delete notification', err);
+      fetchNotifications();
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    try {
+      setNotifications([]);
+      await api.clearAllNotifications();
+    } catch (err) {
+      console.error('Failed to clear all notifications', err);
+      fetchNotifications();
     }
   };
 
@@ -263,8 +321,12 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         dismissToast,
         refreshThreats: fetchThreats,
         refreshNotifications: fetchNotifications,
+        deleteThreat,
+        clearAllThreats,
         markNotificationAsRead,
         markAllNotificationsAsRead,
+        deleteNotification,
+        clearAllNotifications,
         updateThreatStatusLocally,
       }}
     >
