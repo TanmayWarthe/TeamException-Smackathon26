@@ -6,13 +6,13 @@
 import { CandidateWebsite, AnalysisResult, ExtensionMessage, getRiskLevel } from '../shared/types';
 import { isLoginPage, collectFormMetadata } from '../utils/domHelpers';
 
-// ── Risk colours (white/light theme) ────────────────────────
-const BANNER_THEME: Record<string, { fg: string; bg: string; border: string; label: string }> = {
-  TRUSTED:    { fg: '#15803d', bg: '#f0fdf4', border: '#bbf7d0', label: 'Trusted' },
-  LOW:        { fg: '#a16207', bg: '#fefce8', border: '#fde68a', label: 'Low Risk' },
-  SUSPICIOUS: { fg: '#c2410c', bg: '#fff7ed', border: '#fed7aa', label: 'Suspicious' },
-  HIGH:       { fg: '#dc2626', bg: '#fef2f2', border: '#fecaca', label: 'High Risk' },
-  CRITICAL:   { fg: '#991b1b', bg: '#fef2f2', border: '#f87171', label: 'Critical' },
+// ── Risk colours (refined elegant theme) ────────────────────
+const BANNER_THEME: Record<string, { fg: string; bg: string; border: string; accent: string; label: string }> = {
+  TRUSTED:    { fg: '#16a34a', bg: '#f0fdf4', border: '#dcfce7', accent: '#16a34a', label: 'Trusted' },
+  LOW:        { fg: '#d97706', bg: '#fffbeb', border: '#fef3c7', accent: '#d97706', label: 'Low Risk' },
+  SUSPICIOUS: { fg: '#ea580c', bg: '#fff7ed', border: '#ffedd5', accent: '#ea580c', label: 'Suspicious' },
+  HIGH:       { fg: '#dc2626', bg: '#fef2f2', border: '#fee2e2', accent: '#dc2626', label: 'High Risk' },
+  CRITICAL:   { fg: '#b91c1c', bg: '#fff1f2', border: '#fce7f3', accent: '#b91c1c', label: 'Critical' },
 };
 
 // ── Banner State ─────────────────────────────────────────────
@@ -92,11 +92,12 @@ function injectWarningBanner(result: AnalysisResult): void {
 
   const reasons = result.reasons
     .slice(0, 3)
-    .map(r => `<li style="margin:3px 0;color:#6b7280;font-size:12px;">${r}</li>`)
+    .map(r => `<li><span class="ctip-dot"></span>${r}</li>`)
     .join('');
 
   shadow.innerHTML = `
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
       @keyframes ctip-slide-down {
         from { transform: translateY(-100%); opacity: 0; }
         to   { transform: translateY(0);     opacity: 1; }
@@ -105,87 +106,111 @@ function injectWarningBanner(result: AnalysisResult): void {
         all: initial;
         display: flex;
         align-items: flex-start;
-        gap: 14px;
-        padding: 14px 20px;
+        gap: 13px;
+        padding: 13px 18px;
         background: #ffffff;
-        border-bottom: 3px solid ${theme.border};
-        border-top: 3px solid ${theme.fg};
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        border-bottom: 1px solid #f4f4f5;
+        border-left: 3px solid ${theme.accent};
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-size: 13px;
         line-height: 1.5;
-        animation: ctip-slide-down 0.3s ease-out;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        animation: ctip-slide-down 0.28s ease-out;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.07);
       }
       .ctip-icon {
         flex-shrink: 0;
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         background: ${theme.bg};
-        border: 1.5px solid ${theme.border};
-        border-radius: 8px;
+        border-radius: 7px;
         display: flex;
         align-items: center;
         justify-content: center;
+        margin-top: 1px;
       }
-      .ctip-body { flex: 1; }
+      .ctip-body { flex: 1; min-width: 0; }
       .ctip-heading {
-        margin: 0 0 2px;
-        font-size: 13px;
+        margin: 0 0 1px;
+        font-size: 12.5px;
         font-weight: 700;
-        color: #111827;
+        color: #18181b;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 7px;
+        flex-wrap: wrap;
       }
       .ctip-level-tag {
         display: inline-block;
-        padding: 1px 8px;
+        padding: 1px 7px;
         border-radius: 4px;
         background: ${theme.bg};
         color: ${theme.fg};
-        font-size: 11px;
+        font-size: 10.5px;
         font-weight: 700;
-        border: 1px solid ${theme.border};
       }
-      .ctip-domain {
-        font-size: 11px;
-        color: #9ca3af;
-        margin-bottom: 4px;
+      .ctip-domain-text {
+        font-size: 10.5px;
+        color: #a1a1aa;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
-      .ctip-reasons { list-style:none; padding:0; margin:4px 0 10px; }
-      .ctip-actions { display:flex; gap:8px; margin-top:2px; }
+      .ctip-reasons {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 9px;
+      }
+      .ctip-reasons li {
+        font-size: 11.5px;
+        color: #71717a;
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        padding: 2px 0;
+        line-height: 1.4;
+      }
+      .ctip-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #d4d4d8;
+        flex-shrink: 0;
+        margin-top: 5px;
+      }
+      .ctip-actions { display: flex; gap: 7px; }
       .ctip-btn {
         all: initial;
         display: inline-flex;
         align-items: center;
-        padding: 6px 14px;
+        padding: 6px 13px;
         border-radius: 6px;
         font-family: inherit;
-        font-size: 12px;
+        font-size: 11.5px;
         font-weight: 600;
         cursor: pointer;
+        letter-spacing: -0.01em;
+        transition: opacity 0.12s;
       }
+      .ctip-btn:hover { opacity: 0.88; }
       .ctip-btn-leave {
         background: ${theme.fg};
         color: #ffffff;
       }
-      .ctip-btn-leave:hover { opacity: 0.9; }
       .ctip-btn-continue {
-        background: #f3f4f6;
-        color: #4b5563;
-        border: 1px solid #e5e7eb;
+        background: #f4f4f5;
+        color: #52525b;
       }
-      .ctip-btn-continue:hover { background: #e5e7eb; }
       #ctip-verifying {
-        font-size: 11px;
-        color: #9ca3af;
+        font-size: 10px;
+        color: #a1a1aa;
         font-weight: 400;
       }
     </style>
 
     <div class="ctip-banner" role="alert">
       <div class="ctip-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${theme.fg}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${theme.fg}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2l7 4v5c0 5.25-3.5 9.74-7 11-3.5-1.26-7-5.75-7-11V6l7-4z"/>
           <line x1="12" y1="8" x2="12" y2="12"/>
           <circle cx="12" cy="15" r="0.8" fill="${theme.fg}"/>
@@ -198,7 +223,7 @@ function injectWarningBanner(result: AnalysisResult): void {
           <span id="ctip-score-badge" class="ctip-level-tag">${theme.label} · ${result.risk_score}%</span>
           ${isFallback ? '<span id="ctip-verifying">Verifying…</span>' : ''}
         </p>
-        <p class="ctip-domain">${window.location.hostname}</p>
+        <p class="ctip-domain-text">${window.location.hostname}</p>
         <ul id="ctip-reasons" class="ctip-reasons">${reasons}</ul>
         <div class="ctip-actions">
           <button class="ctip-btn ctip-btn-leave" id="ctip-leave">Leave This Site</button>
@@ -245,7 +270,7 @@ function updateWarningBanner(result: AnalysisResult): void {
   if (reasonsList) {
     reasonsList.innerHTML = result.reasons
       .slice(0, 3)
-      .map(r => `<li style="margin:3px 0;color:#6b7280;font-size:12px;">${r}</li>`)
+      .map(r => `<li><span class="ctip-dot"></span>${r}</li>`)
       .join('');
   }
 
