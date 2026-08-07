@@ -41,7 +41,7 @@ async function updateBadge(tabId: number, result: AnalysisResult | null): Promis
     const text = result.risk_score.toString();
 
     await chrome.action.setBadgeText({ text, tabId }).catch(() => {});
-    await chrome.action.setBadgeBackgroundColor({ color: BADGE_COLORS[level] || '#64748b', tabId }).catch(() => {});
+    await chrome.action.setBadgeBackgroundColor({ color: BADGE_COLORS[level] || '#22c55e', tabId }).catch(() => {});
     if (chrome.action.setBadgeTextColor) {
       await chrome.action.setBadgeTextColor({ color: '#ffffff', tabId }).catch(() => {});
     }
@@ -342,11 +342,11 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
       const domain = new URL(tab.url).hostname;
       const domainKey = getDomainKey(tab.url, domain);
       const state = tabStates.get(activeInfo.tabId);
-      if (state?.result && state.domain === domainKey && (state.result.risk_score > 0 || domainKey.includes('ycce.edu'))) {
+      if (state?.result && state.domain === domainKey) {
         updateBadge(activeInfo.tabId, state.result).catch(() => {});
       } else {
         const cached = await getCachedResult(domainKey);
-        if (cached && (cached.result.risk_score > 0 || domainKey.includes('ycce.edu'))) {
+        if (cached?.result) {
           tabStates.set(activeInfo.tabId, {
             domain: domainKey,
             url: tab.url,
@@ -354,8 +354,12 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
             cachedAt: cached.cachedAt,
           });
           updateBadge(activeInfo.tabId, cached.result).catch(() => {});
+        } else {
+          updateBadge(activeInfo.tabId, null).catch(() => {});
         }
       }
+    } else {
+      updateBadge(activeInfo.tabId, null).catch(() => {});
     }
   } catch (e) {
     // Ignore tab get errors

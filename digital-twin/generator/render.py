@@ -67,9 +67,12 @@ async def render_page(url: str, screenshot_path: str | None = None) -> dict:
             page: Page = await context.new_page()
 
             try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=25000)
-            except Exception as e:
-                print(f"[Render] Playwright goto notice for {url}: {e}")
+                await page.goto(url, wait_until="commit", timeout=6000)
+            except Exception:
+                try:
+                    await page.goto(url, wait_until="domcontentloaded", timeout=4000)
+                except Exception as e:
+                    print(f"[Render] Fast-render notice for {url}: {e}")
 
             # Wait briefly for JS rendering
             try:

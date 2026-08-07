@@ -65,7 +65,7 @@ SUSPICIOUS_TLDS = {
 
 # ── Playwright browser config ────────────────────────────────
 BROWSER_HEADLESS = True
-BROWSER_TIMEOUT_MS = 30_000
+BROWSER_TIMEOUT_MS = 6_000
 
 # ── Domain sanitization for filenames ─────────────────────────
 def sanitize_domain(domain: str) -> str:

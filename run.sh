@@ -155,7 +155,12 @@ echo -e "🔹 ${BOLD}SOC Web Dashboard:${NC}        ${GREEN}http://localhost:517
 echo -e "🔹 ${BOLD}Backend REST & WS API:${NC}    ${GREEN}http://localhost:8000${NC}"
 echo -e "🔹 ${BOLD}Interactive API Docs (Swagger):${NC} ${GREEN}http://localhost:8000/docs${NC}"
 if [ -d "demo/phishing_site" ]; then
-echo -e "🔹 ${BOLD}Live Demo Phishing Portal:${NC} ${RED}http://localhost:8088${NC}"
+echo -e "🔹 ${BOLD}Live Demo Phishing Hub:${NC}   ${RED}http://localhost:8088${NC}"
+echo -e "   • YCCE Phishing Demo:     ${RED}http://ycce-student-auth.xyz:8088/ycce.html${NC}"
+echo -e "   • SBI NetBanking Demo:    ${RED}http://sbi-onlinesbi-verification.xyz:8088/sbi.html${NC}"
+echo -e "   • GitHub SSO Demo:        ${RED}http://github-login-authentication.net:8088/github.html${NC}"
+echo -e "   • Amazon Security Demo:   ${RED}http://amazon-security-update.xyz:8088/amazon.html${NC}"
+echo -e "   • Google Workspace Demo:  ${RED}http://google-account-verify.online:8088/google.html${NC}"
 fi
 echo -e "------------------------------------------------------------------------"
 echo -e "🔑 ${BOLD}Admin Credentials:${NC}"

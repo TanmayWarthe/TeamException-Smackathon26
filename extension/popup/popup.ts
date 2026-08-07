@@ -129,14 +129,6 @@ function renderRisk(result: AnalysisResult, cachedAt: string | null, domain?: st
       ${t.rec}
     </div>
 
-    ${result.matched_twin ? `
-      <div style="margin-top:10px;padding:5px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#475569;display:flex;align-items:center;gap:6px;width:100%;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2l9 8H3l9-8z"/></svg>
-        <span style="font-weight:600;color:#1e293b;">Twin:</span>
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${result.matched_twin}</span>
-      </div>
-    ` : ''}
-
     ${reasonDots ? `
       <div class="ctip-divider"></div>
       <ul class="risk-reasons">${reasonDots}</ul>

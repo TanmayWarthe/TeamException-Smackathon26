@@ -1,5 +1,8 @@
+# pyrefly: ignore [missing-import]
 from fastapi import APIRouter, Depends
+# pyrefly: ignore [missing-import]
 from sqlalchemy.ext.asyncio import AsyncSession
+# pyrefly: ignore [missing-import]
 from sqlalchemy import select
 from urllib.parse import urlparse
 from datetime import datetime, timezone
@@ -77,7 +80,8 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
 
     details = result.get("details", {})
     fused_scores = details.get("fused_scores", {})
-    twin_domain = details.get("twin_domain", "ycce.edu")
+    twin_domain = details.get("twin_domain")
+    is_unknown = details.get("no_twin", False) or status == "UNKNOWN" or not twin_domain
 
     # Build risk breakdown for rich explanation
     risk_breakdown = []
@@ -99,34 +103,35 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
         })
 
     # Look up digital twin from DB for accurate portal metadata
-    clean_target = twin_domain.replace("www.", "").strip().lower()
-    twin_db_res = await db.execute(
-        select(DigitalTwinModel).where(
-            (DigitalTwinModel.domain == twin_domain) |
-            (DigitalTwinModel.domain == clean_target) |
-            (DigitalTwinModel.domain == f"www.{clean_target}") |
-            (DigitalTwinModel.official_url.like(f"%{clean_target}%")) |
-            (DigitalTwinModel.website_name.ilike(f"%{clean_target}%"))
+    matched_twin = None
+    if twin_domain and not is_unknown:
+        clean_target = twin_domain.replace("www.", "").strip().lower()
+        twin_db_res = await db.execute(
+            select(DigitalTwinModel).where(
+                (DigitalTwinModel.domain == twin_domain) |
+                (DigitalTwinModel.domain == clean_target) |
+                (DigitalTwinModel.domain == f"www.{clean_target}") |
+                (DigitalTwinModel.official_url.like(f"%{clean_target}%")) |
+                (DigitalTwinModel.website_name.ilike(f"%{clean_target}%"))
+            )
         )
-    )
-    twin_record = twin_db_res.scalars().first()
-    portal_name = twin_record.website_name if twin_record else (
-        f"{clean_target.capitalize()} Portal"
-    )
-    official_screenshot = twin_record.screenshot_path if twin_record else ""
+        twin_record = twin_db_res.scalars().first()
+        portal_name = twin_record.website_name if twin_record else (
+            f"{clean_target.capitalize()} Portal"
+        )
+        official_screenshot = twin_record.screenshot_path if twin_record else ""
 
-    matched_twin = {
-        "website_name": portal_name,
-        "domain": twin_record.domain if twin_record else twin_domain,
-        "official_url": twin_record.official_url if twin_record else (f"https://{twin_domain}" if not twin_domain.startswith("http") else twin_domain),
-    }
+        matched_twin = {
+            "website_name": portal_name,
+            "domain": twin_record.domain if twin_record else twin_domain,
+            "official_url": twin_record.official_url if twin_record else (f"https://{twin_domain}" if not twin_domain.startswith("http") else twin_domain),
+        }
 
     # ── Persist to active threats DB (only genuine risk results) ─
-    is_unknown = details.get("no_twin", False) or status == "UNKNOWN"
     persisted_threat_id = None
     now_utc = datetime.now(timezone.utc)
 
-    if not is_unknown and risk_score >= MIN_THREAT_PERSIST_SCORE:
+    if not is_unknown and risk_score >= MIN_THREAT_PERSIST_SCORE and twin_domain:
         infra = resolve_domain_infrastructure(candidate_url, domain)
 
         # Upsert: check for existing ACTIVE threat for this domain

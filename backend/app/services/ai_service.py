@@ -179,16 +179,40 @@ def _no_twin_response(twin_domain: str) -> dict[str, Any]:
     }
 
 
+_LEGITIMATE_DATASET_DOMAINS = None
+
+def _get_legitimate_domains() -> set[str]:
+    global _LEGITIMATE_DATASET_DOMAINS
+    if _LEGITIMATE_DATASET_DOMAINS is None:
+        _LEGITIMATE_DATASET_DOMAINS = set()
+        dataset_path = _project_root / "legitimate_domains_dataset.json"
+        if dataset_path.exists():
+            try:
+                import json
+                with open(dataset_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    for item in data:
+                        dom = (item.get("domain") or "").strip().lower()
+                        if dom:
+                            _LEGITIMATE_DATASET_DOMAINS.add(dom)
+                            clean = dom.replace("www.", "")
+                            _LEGITIMATE_DATASET_DOMAINS.add(clean)
+                            _LEGITIMATE_DATASET_DOMAINS.add(f"www.{clean}")
+            except Exception as e:
+                print(f"[AIService] Error loading legitimate domains dataset: {e}")
+    return _LEGITIMATE_DATASET_DOMAINS
+
+
 # ── Shared AI Evaluation Pipeline ─────────────────────────────
 def _evaluate_candidate_evidence(
     candidate_evidence: dict[str, Any],
-    twin_domain: str = "ycce.edu",
+    twin_domain: Optional[str] = None,
     analysis_type: str = "HTML",
 ) -> dict[str, Any]:
     """
     Unified AI analysis evaluation pipeline.
     Takes structured candidate evidence (from HTML or Playwright) and runs:
-      1. Digital Twin loading
+      1. Digital Twin loading & targeted brand/domain matching
       2. Feature fusion (ai-engine)
       3. Risk scoring (risk-engine)
       4. Risk categorization (thresholds)
@@ -215,6 +239,7 @@ def _evaluate_candidate_evidence(
         "linkedin.com", "apple.com", "amazon.com", "facebook.com", "twitter.com", "x.com",
         "instagram.com", "youtube.com", "reddit.com", "discord.com", "slack.com",
         "dropbox.com", "notion.so", "figma.com", "canva.com", "zoom.us",
+        "geeksforgeeks.org", "practice.geeksforgeeks.org", "leetcode.com", "hackerrank.com",
         # Developer / open-source
         "jupyter.org", "python.org", "nodejs.org", "npmjs.com", "pypi.org",
         "rust-lang.org", "golang.org", "go.dev", "ruby-lang.org",
@@ -238,6 +263,8 @@ def _evaluate_candidate_evidence(
     # Auto-trust well-known institutional TLDs (.edu, .gov, .mil, .ac.in)
     TRUSTED_TLD_PATTERNS = (".edu", ".gov", ".mil", ".ac.in", ".edu.in", ".res.in")
 
+    legit_dataset = _get_legitimate_domains()
+
     is_official_institutional = (
         candidate_domain in INSTITUTIONAL_ROOTS
         or any(candidate_domain.endswith("." + root) for root in INSTITUTIONAL_ROOTS)
@@ -246,12 +273,16 @@ def _evaluate_candidate_evidence(
         candidate_domain in GLOBAL_PUBLIC_ALLOWLIST
         or any(candidate_domain.endswith("." + domain) for domain in GLOBAL_PUBLIC_ALLOWLIST)
     )
+    is_in_legit_dataset = (
+        candidate_domain in legit_dataset
+        or any(candidate_domain.endswith("." + d) for d in legit_dataset if len(d) > 3)
+    )
     is_trusted_tld = any(
         candidate_domain.endswith(tld) for tld in TRUSTED_TLD_PATTERNS
     )
 
-    if is_official_institutional or is_global_public or is_trusted_tld:
-        domain_type = "campus" if is_official_institutional else ("educational/government" if is_trusted_tld else "global public")
+    if is_official_institutional or is_global_public or is_in_legit_dataset or is_trusted_tld:
+        domain_type = "campus" if is_official_institutional else ("educational/government" if is_trusted_tld else "verified legitimate")
         print(f"[AIService] '{candidate_domain}' is a verified {domain_type} domain.")
         return {
             "status": "TRUSTED",
@@ -281,6 +312,7 @@ def _evaluate_candidate_evidence(
 
     # ── 1. Load Digital Twin(s) ──────────────────────────────
     twins_to_evaluate = []
+    is_explicit_twin = False
     try:
         twin_store = _get_twin_store()
         
@@ -295,6 +327,7 @@ def _evaluate_candidate_evidence(
             if exact_twin:
                 # Target twin explicitly found — evaluate directly against this target
                 twins_to_evaluate.append((exact_twin.get("domain") or twin_domain, exact_twin))
+                is_explicit_twin = True
 
         # If no explicit twin or explicit twin not found, load all registered twins for smart matching
         if not twins_to_evaluate:
@@ -329,31 +362,77 @@ def _evaluate_candidate_evidence(
             risk_result = scoring_mod.calculate_risk(fused_scores)
             calc_risk = risk_result["risk_score"]
 
-            # Calculate twin target alignment score (structural + title/brand keyword matching)
             twin_name = (twin.get("website_name") or "").lower()
             clean_twin_dom = current_twin_domain.replace("www.", "").split(".")[0].lower()
             
-            alignment = (
+            # Structural & visual alignment
+            structural_alignment = (
                 fused_scores.get("dom", 0) * 0.35 +
                 fused_scores.get("visual", 0) * 0.25 +
-                fused_scores.get("logo", 0) * 0.2 +
-                fused_scores.get("form", 0) * 0.2
+                fused_scores.get("logo", 0) * 0.20 +
+                fused_scores.get("form", 0) * 0.20
             )
 
-            # Keyword / Brand Name Bonus to lock onto the correct twin
-            if clean_twin_dom and len(clean_twin_dom) > 2:
-                if clean_twin_dom in cand_title or clean_twin_dom in cand_domain or clean_twin_dom in cand_raw_html:
-                    alignment += 50.0
-            if twin_name and len(twin_name) > 2 and (twin_name in cand_title or twin_name in cand_raw_html):
-                alignment += 50.0
+            # Brand / Keyword / Typosquatting matching
+            brand_alignment = 0.0
+            has_brand_mention = False
 
-            if alignment > max_alignment_score:
-                max_alignment_score = alignment
+            if clean_twin_dom and len(clean_twin_dom) > 2:
+                if clean_twin_dom in cand_domain:
+                    brand_alignment += 60.0
+                    has_brand_mention = True
+                if clean_twin_dom in cand_title:
+                    brand_alignment += 50.0
+                    has_brand_mention = True
+                if clean_twin_dom in cand_raw_html:
+                    brand_alignment += 30.0
+                    has_brand_mention = True
+
+            if twin_name and len(twin_name) > 3:
+                if twin_name in cand_title:
+                    brand_alignment += 60.0
+                    has_brand_mention = True
+                if twin_name in cand_raw_html:
+                    brand_alignment += 30.0
+                    has_brand_mention = True
+
+            # Typosquatting similarity check
+            from difflib import SequenceMatcher
+            clean_cand_root = cand_domain.replace("www.", "").split(".")[0]
+            if len(clean_cand_root) > 2 and len(clean_twin_dom) > 2:
+                typo_ratio = SequenceMatcher(None, clean_cand_root, clean_twin_dom).ratio()
+                if typo_ratio > 0.75 and clean_cand_root != clean_twin_dom:
+                    brand_alignment += 50.0
+                    has_brand_mention = True
+
+            red_flags = fused_scores.get("red_flags", [])
+            has_external_pw_theft = any("Credential Submission Redirected" in rf for rf in red_flags)
+
+            # Match criteria: A twin is valid if:
+            # 1. It was explicitly targeted by caller, OR
+            # 2. Candidate explicitly mimics twin's brand/domain token, OR
+            # 3. Candidate is a high-fidelity visual/DOM clone (structural >= 70%), OR
+            # 4. External credential exfiltration red flag detected
+            is_valid_target_twin = (
+                is_explicit_twin or
+                has_brand_mention or
+                structural_alignment >= 70.0 or
+                (has_external_pw_theft and (has_brand_mention or structural_alignment >= 55.0))
+            )
+
+            if not is_valid_target_twin:
+                # This twin is unrelated to candidate site — skip matching to avoid false alarms
+                continue
+
+            total_alignment = structural_alignment + brand_alignment
+
+            if total_alignment > max_alignment_score:
+                max_alignment_score = total_alignment
                 category = categorize_mod.categorize_risk(calc_risk)
                 reasons = explain_mod.generate_reasons(
                     fused_scores=fused_scores,
                     contributions=risk_result["component_contributions"],
-                    red_flags=fused_scores.get("red_flags", []),
+                    red_flags=red_flags,
                     risk_score=calc_risk,
                 )
                 final_score = int(round(calc_risk))
@@ -367,7 +446,7 @@ def _evaluate_candidate_evidence(
                     "details": {
                         "fused_scores": {k: float(v) for k, v in fused_scores.items() if isinstance(v, (int, float))},
                         "component_contributions": risk_result.get("component_contributions", {}),
-                        "red_flags": fused_scores.get("red_flags", []),
+                        "red_flags": red_flags,
                         "candidate_domain": candidate_domain,
                         "twin_domain": current_twin_domain,
                         "no_twin": False,
@@ -382,7 +461,33 @@ def _evaluate_candidate_evidence(
               f"status={best_response['status']}, risk_score={best_response['risk_score']}")
         return best_response
 
-    return _no_twin_response(twin_domain)
+    # If no twin was targeted or matched, candidate is a standard benign website
+    print(f"[AIService] Candidate '{candidate_domain}' does not mimic any registered digital twin. Returning TRUSTED.")
+    return {
+        "status": "TRUSTED",
+        "risk_score": 0,
+        "confidence": 90,
+        "recommendation": "ALLOW",
+        "reasons": [
+            f"Standard web page ({candidate_domain}) — no brand impersonation or phishing indicators detected against registered digital twins."
+        ],
+        "details": {
+            "fused_scores": {
+                "visual": 0.0,
+                "dom": 0.0,
+                "form": 0.0,
+                "url": 0.0,
+                "ssl": 0.0,
+                "logo": 0.0,
+                "javascript": 0.0,
+            },
+            "component_contributions": {},
+            "red_flags": [],
+            "candidate_domain": candidate_domain,
+            "twin_domain": None,
+            "no_twin": True,
+        },
+    }
 
 
 # ── Main entry point: HTML-first analysis ─────────────────────
