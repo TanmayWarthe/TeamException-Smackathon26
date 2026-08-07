@@ -119,17 +119,14 @@ export function getEffectivePageInfo(): { domain: string; url: string } {
   let domain = window.location.hostname;
   let url = window.location.href;
 
-  if (metaDomain) {
+  if (metaDomain && metaDomain.trim()) {
     domain = metaDomain.trim();
-  } else if ((domain === 'localhost' || domain === '127.0.0.1') && window.location.port === '8088') {
-    domain = 'ycce-student-auth.xyz';
   }
 
-  if (metaUrl) {
+  if (metaUrl && metaUrl.trim()) {
     url = metaUrl.trim();
-  } else if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '8088') {
-    url = 'https://ycce-student-auth.xyz/login';
   }
 
   return { domain, url };
 }
+

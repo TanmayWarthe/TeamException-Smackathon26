@@ -384,6 +384,12 @@ export default function DigitalTwins() {
               type="url"
               value={createOfficialUrl}
               onChange={(e) => setCreateOfficialUrl(e.target.value)}
+              onBlur={(e) => {
+                let val = e.target.value.trim();
+                if (val && !val.startsWith('http://') && !val.startsWith('https://')) {
+                  setCreateOfficialUrl('https://' + val);
+                }
+              }}
               placeholder="https://exam.ycce.edu"
               className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 outline-none focus:border-blue-500 transition text-sm"
               disabled={createSubmitting}
@@ -447,6 +453,12 @@ export default function DigitalTwins() {
               type="url"
               value={editOfficialUrl}
               onChange={(e) => setEditOfficialUrl(e.target.value)}
+              onBlur={(e) => {
+                let val = e.target.value.trim();
+                if (val && !val.startsWith('http://') && !val.startsWith('https://')) {
+                  setEditOfficialUrl('https://' + val);
+                }
+              }}
               placeholder="https://www.ycce.edu"
               className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 outline-none focus:border-blue-500 transition text-sm"
               disabled={editSubmitting}

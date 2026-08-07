@@ -1,17 +1,25 @@
-# OS & IDE
+# =============================================================================
+# CTIP - Campus Threat Intelligence Platform .gitignore
+# =============================================================================
+
+# Operating System & IDE
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 
 # Environment & Secrets
 .env
 .env.local
 .env.*.local
+*.pem
+*.key
+*.cert
 
-# Python
+# Python & Virtual Environments
 __pycache__/
 *.py[cod]
 *$py.class
@@ -19,6 +27,7 @@ __pycache__/
 .venv/
 venv/
 ENV/
+env/
 build/
 develop-eggs/
 downloads/
@@ -31,40 +40,55 @@ sdist/
 var/
 wheels/
 *.egg
+*.manifest
+*.spec
 
-# Testing & Coverage
+# Testing & Code Quality
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
 .nox/
+.ruff_cache/
+.mypy_cache/
 
-# Databases
+# Databases & Runtime State
 *.db
 *.sqlite
 *.sqlite3
+*.sqlite-wal
+*.sqlite-shm
 backend/ctip.db
+backend/test.db
 
-# Node / Frontend / Extension
+# Node / Frontend / Chrome Extension Builds & Dependencies
 node_modules/
 dist/
+dist-firefox/
+frontend/dist/
 extension/dist/
 extension/dist-firefox/
-frontend/dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+.eslintcache
 
-# Temporary Runtime Artifacts
+# Playwright & Browser Testing Cache
+.playwright/
+playwright/.cache/
+test-results/
+
+# Temporary Evidence & Candidate Runtime Artifacts
 digital-twin/storage/screenshots/candidate_*
 digital-twin/storage/embeddings/candidate_*
 digital-twin/storage/logos/candidate_*
+evidence/
+tmp/
+temp/
 
-
-# project pdfs
-
+# Scratch & Temporary Testing Directories
+test_*/
+pdf*.txt
 *.pdf
-*.txt
-
-# Local working notes
 HOW_IT_WORKS.txt

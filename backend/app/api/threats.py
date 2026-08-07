@@ -41,23 +41,35 @@ async def get_threat_detail(id: str, db: AsyncSession = Depends(get_db)):
     detected_str = t.detected_at.isoformat() if t.detected_at else datetime.now(timezone.utc).isoformat()
 
     # Look up matched digital twin dynamically from DB
-    twin_result = await db.execute(
-        select(DigitalTwinModel).where(
-            (DigitalTwinModel.website_name == t.targeted_portal) |
-            (DigitalTwinModel.domain == t.targeted_portal) |
-            (DigitalTwinModel.official_url.like(f"%{t.targeted_portal}%")) |
-            (DigitalTwinModel.domain == t.domain)
-        )
-    )
-    twin = twin_result.scalars().first()
-    if not twin and t.targeted_portal:
-        any_twin_res = await db.execute(
+    target_clean = (t.targeted_portal or "").strip()
+    target_lower = target_clean.lower()
+    
+    twin = None
+    if target_clean:
+        twin_result = await db.execute(
             select(DigitalTwinModel).where(
-                DigitalTwinModel.website_name.ilike(f"%{t.targeted_portal}%") |
-                DigitalTwinModel.domain.ilike(f"%{t.targeted_portal}%")
+                (DigitalTwinModel.website_name == target_clean) |
+                (DigitalTwinModel.website_name.ilike(f"%{target_clean}%")) |
+                (DigitalTwinModel.domain == target_clean) |
+                (DigitalTwinModel.domain.ilike(f"%{target_clean}%")) |
+                (DigitalTwinModel.official_url.ilike(f"%{target_clean}%"))
             )
         )
-        twin = any_twin_res.scalars().first()
+        twin = twin_result.scalars().first()
+
+    if not twin:
+        # Check by individual keywords (e.g. 'amazon', 'github', 'ycce')
+        for keyword in [w for w in target_lower.split() if len(w) > 3]:
+            kw_res = await db.execute(
+                select(DigitalTwinModel).where(
+                    DigitalTwinModel.website_name.ilike(f"%{keyword}%") |
+                    DigitalTwinModel.domain.ilike(f"%{keyword}%") |
+                    DigitalTwinModel.official_url.ilike(f"%{keyword}%")
+                )
+            )
+            twin = kw_res.scalars().first()
+            if twin:
+                break
 
     matched_twin = None
     if twin:

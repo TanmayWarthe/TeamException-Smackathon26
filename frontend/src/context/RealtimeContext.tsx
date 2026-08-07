@@ -84,25 +84,36 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       switch (type) {
         case 'THREAT_DETECTED': {
           const incomingThreat: Threat = {
-            id: data.id || `thr_${Date.now()}`,
+            id: data.id ? String(data.id) : `thr_${Date.now()}`,
             url: data.url,
             domain: data.domain,
-            targeted_portal: data.targeted_portal || 'ERP',
+            targeted_portal: data.targeted_portal || 'Unknown Portal',
             risk_score: data.risk_score,
             confidence: data.confidence,
             threat_status: (data.threat_status as Threat['threat_status']) || 'ACTIVE',
             detected_at: data.detected_at || new Date().toISOString(),
-            screenshot_path: data.screenshot_path || '/mock/screenshots/threat_001.png',
+            screenshot_path: data.screenshot_path || '',
+            recommendation: data.recommendation,
+            ip_address: data.ip_address,
+            registrar: data.registrar,
+            ssl_status: data.ssl_status,
           };
 
           setLatestThreat(incomingThreat);
           setThreats((prev) => {
-            const exists = prev.some((t) => t.id === incomingThreat.id || t.domain === incomingThreat.domain);
-            if (exists) {
-              return prev.map((t) => (t.id === incomingThreat.id || t.domain === incomingThreat.domain ? incomingThreat : t));
+            const existingIdx = prev.findIndex(
+              (t) => String(t.id) === String(incomingThreat.id) || t.domain === incomingThreat.domain
+            );
+            if (existingIdx >= 0) {
+              const updated = [...prev];
+              updated[existingIdx] = { ...updated[existingIdx], ...incomingThreat };
+              return updated;
             }
             return [incomingThreat, ...prev];
           });
+
+          // Also trigger a fresh fetch from REST API to get complete data
+          setTimeout(() => fetchThreats(), 1000);
 
           // Trigger Live Audio/Visual Toast
           const isCritical = incomingThreat.risk_score >= 90;
@@ -115,9 +126,16 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
 
         case 'THREAT_STATUS_CHANGED': {
-          setThreats((prev) =>
-            prev.map((t) => (t.id === data.threat_id ? { ...t, threat_status: data.status } : t))
-          );
+          const tid = String(data.id || data.threat_id || '');
+          const newStatus = data.status || data.threat_status;
+          if (tid && newStatus) {
+            setThreats((prev) =>
+              prev.map((t) => (String(t.id) === tid ? { ...t, threat_status: newStatus } : t))
+            );
+          } else {
+            // Fallback: full refetch
+            fetchThreats();
+          }
           break;
         }
 

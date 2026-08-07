@@ -102,6 +102,19 @@ def load_twin(domain: str) -> Optional[dict[str, Any]]:
     return twin
 
 
+def load_all_twins() -> list[dict[str, Any]]:
+    """Load all registered Digital Twins with full embeddings."""
+    twins = []
+    if not TWINS_DIR.exists():
+        return twins
+    for json_file in sorted(TWINS_DIR.glob("*.json")):
+        domain_name = json_file.stem.replace("_", ".")
+        t = load_twin(domain_name)
+        if t:
+            twins.append(t)
+    return twins
+
+
 def list_twins() -> list[dict[str, Any]]:
     """
     List all stored Digital Twins (metadata only, no embeddings loaded).

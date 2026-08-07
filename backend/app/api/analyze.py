@@ -94,21 +94,25 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
         })
 
     # Look up digital twin from DB for accurate portal metadata
+    clean_target = twin_domain.replace("www.", "").strip().lower()
     twin_db_res = await db.execute(
         select(DigitalTwinModel).where(
             (DigitalTwinModel.domain == twin_domain) |
-            (DigitalTwinModel.official_url.like(f"%{twin_domain}%"))
+            (DigitalTwinModel.domain == clean_target) |
+            (DigitalTwinModel.domain == f"www.{clean_target}") |
+            (DigitalTwinModel.official_url.like(f"%{clean_target}%")) |
+            (DigitalTwinModel.website_name.ilike(f"%{clean_target}%"))
         )
     )
     twin_record = twin_db_res.scalars().first()
     portal_name = twin_record.website_name if twin_record else (
-        "YCCE ERP Portal" if "erp" in twin_domain else "YCCE Official Portal"
+        f"{clean_target.capitalize()} Portal"
     )
     official_screenshot = twin_record.screenshot_path if twin_record else ""
 
     matched_twin = {
         "website_name": portal_name,
-        "domain": twin_domain,
+        "domain": twin_record.domain if twin_record else twin_domain,
         "official_url": twin_record.official_url if twin_record else (f"https://{twin_domain}" if not twin_domain.startswith("http") else twin_domain),
     }
 
@@ -132,6 +136,7 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
         if existing_threat:
             # Update existing active threat row in-place
             existing_threat.url = candidate_url
+            existing_threat.targeted_portal = portal_name
             existing_threat.risk_score = risk_score
             existing_threat.confidence = confidence
             existing_threat.recommendation = recommendation
@@ -141,7 +146,7 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
             existing_threat.ip_address = infra["ip_address"]
             existing_threat.registrar = infra["registrar"]
             existing_threat.ssl_status = infra["ssl_status"]
-            if not existing_threat.official_screenshot_path and official_screenshot:
+            if official_screenshot:
                 existing_threat.official_screenshot_path = official_screenshot
             existing_threat.explanation = {
                 "risk_score": risk_score,

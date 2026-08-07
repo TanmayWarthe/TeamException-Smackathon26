@@ -15,7 +15,7 @@ const RISK_BADGE: Record<string, string> = {
 }
 
 export default function Dashboard() {
-  const { threats, isConnected } = useRealtime()
+  const { threats } = useRealtime()
   const [stats, setStats] = useState({
     total_threats: 0,
     critical: 0,

@@ -26,6 +26,11 @@ export interface Threat {
   threat_status: 'ACTIVE' | 'BLOCKED' | 'RESOLVED' | 'IGNORED';
   detected_at: string;
   screenshot_path: string;
+  official_screenshot_path?: string;
+  recommendation?: string;
+  ip_address?: string;
+  registrar?: string;
+  ssl_status?: string;
 }
 
 export interface SimilarityReport {

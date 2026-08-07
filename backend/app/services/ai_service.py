@@ -279,86 +279,101 @@ def _evaluate_candidate_evidence(
             },
         }
 
-    # ── 1. Load Digital Twin ──────────────────────────────────
+    # ── 1. Load Digital Twin(s) ──────────────────────────────
+    twins_to_evaluate = []
     try:
         twin_store = _get_twin_store()
-        twin = twin_store.load_twin(twin_domain)
+        exact_twin = twin_store.load_twin(twin_domain)
+        if exact_twin:
+            twins_to_evaluate.append((twin_domain, exact_twin))
+        
+        # Load all registered twins as candidates if no exact match or to find best visual/DOM fit
+        all_twins = twin_store.load_all_twins()
+        for t in all_twins:
+            t_dom = t.get("domain") or twin_domain
+            if not exact_twin or t_dom != twin_domain:
+                twins_to_evaluate.append((t_dom, t))
     except Exception as e:
         print(f"[AIService] ERROR loading twin store: {e}")
         traceback.print_exc()
         return _no_twin_response(twin_domain)
 
-    if twin is None:
-        print(f"[AIService] No twin registered for '{twin_domain}'. Returning UNKNOWN status.")
+    if not twins_to_evaluate:
+        print(f"[AIService] No twins registered in system. Returning UNKNOWN status.")
         return _no_twin_response(twin_domain)
 
-    print(f"[AIService] Target twin: {twin_domain}")
+    fusion_mod = _get_feature_fusion()
+    scoring_mod = _get_scoring()
+    categorize_mod = _get_categorize()
+    explain_mod = _get_explain()
 
-    # ── 2. Run AI fusion ──────────────────────────────────────
-    try:
-        fusion_mod = _get_feature_fusion()
-        fused_scores = fusion_mod.fuse(candidate_evidence, twin)
-        print(f"[AIService] Fused scores: visual={fused_scores.get('visual', 0):.1f}, "
-              f"dom={fused_scores.get('dom', 0):.1f}, "
-              f"form={fused_scores.get('form', 0):.1f}, "
-              f"url={fused_scores.get('url', 0):.1f}, "
-              f"red_flags={fused_scores.get('red_flags', [])}")
-    except Exception as e:
-        print(f"[AIService] Fusion error: {e}")
-        traceback.print_exc()
-        raise
+    best_response = None
+    max_alignment_score = -1.0
 
-    # ── 3. Risk scoring ───────────────────────────────────────
-    try:
-        scoring_mod = _get_scoring()
-        risk_result = scoring_mod.calculate_risk(fused_scores)
+    cand_title = (candidate_evidence.get("title") or "").lower()
+    cand_domain = (candidate_evidence.get("domain") or "").lower()
+    cand_raw_html = str(candidate_evidence.get("dom_fingerprint") or "").lower()
 
-        categorize_mod = _get_categorize()
-        category = categorize_mod.categorize_risk(risk_result["risk_score"])
-    except Exception as e:
-        print(f"[AIService] Scoring error: {e}")
-        traceback.print_exc()
-        raise
+    for current_twin_domain, twin in twins_to_evaluate:
+        try:
+            fused_scores = fusion_mod.fuse(candidate_evidence, twin)
+            risk_result = scoring_mod.calculate_risk(fused_scores)
+            calc_risk = risk_result["risk_score"]
 
-    # ── 4. Generate conditional reasons ──────────────────────
-    try:
-        explain_mod = _get_explain()
-        reasons = explain_mod.generate_reasons(
-            fused_scores=fused_scores,
-            contributions=risk_result["component_contributions"],
-            red_flags=fused_scores.get("red_flags", []),
-            risk_score=risk_result["risk_score"],
-        )
-    except Exception as e:
-        print(f"[AIService] Explain error: {e}")
-        traceback.print_exc()
-        reasons = fused_scores.get("red_flags", [])
+            # Calculate twin target alignment score (structural + title/brand keyword matching)
+            twin_name = (twin.get("website_name") or "").lower()
+            clean_twin_dom = current_twin_domain.replace("www.", "").split(".")[0].lower()
+            
+            alignment = (
+                fused_scores.get("dom", 0) * 0.35 +
+                fused_scores.get("visual", 0) * 0.25 +
+                fused_scores.get("logo", 0) * 0.2 +
+                fused_scores.get("form", 0) * 0.2
+            )
 
-    final_risk_score = int(round(risk_result["risk_score"]))
-    print(f"[AIService] Result: status={category['status']}, "
-          f"risk_score={final_risk_score}, "
-          f"reasons={reasons}")
+            # Keyword / Brand Name Bonus to lock onto the correct twin
+            if clean_twin_dom and len(clean_twin_dom) > 2:
+                if clean_twin_dom in cand_title or clean_twin_dom in cand_domain or clean_twin_dom in cand_raw_html:
+                    alignment += 50.0
+            if twin_name and len(twin_name) > 2 and (twin_name in cand_title or twin_name in cand_raw_html):
+                alignment += 50.0
 
-    return {
-        "status": category["status"],
-        "risk_score": final_risk_score,
-        "confidence": int(round(risk_result["confidence"])),
-        "recommendation": category["recommendation"],
-        "reasons": reasons,
-        "details": {
-            "fused_scores": {
-                k: float(v) for k, v in fused_scores.items()
-                if isinstance(v, (int, float))
-            },
-            "component_contributions": {
-                k: {kk: float(vv) for kk, vv in v.items()}
-                for k, v in risk_result["component_contributions"].items()
-            },
-            "red_flags": fused_scores.get("red_flags", []),
-            "candidate_domain": candidate_domain,
-            "twin_domain": twin_domain,
-        },
-    }
+            if alignment > max_alignment_score:
+                max_alignment_score = alignment
+                category = categorize_mod.categorize_risk(calc_risk)
+                reasons = explain_mod.generate_reasons(
+                    fused_scores=fused_scores,
+                    contributions=risk_result["component_contributions"],
+                    red_flags=fused_scores.get("red_flags", []),
+                    risk_score=calc_risk,
+                )
+                final_score = int(round(calc_risk))
+                
+                best_response = {
+                    "status": category["status"],
+                    "risk_score": final_score,
+                    "confidence": int(round(risk_result["confidence"])),
+                    "recommendation": category["recommendation"],
+                    "reasons": reasons,
+                    "details": {
+                        "fused_scores": {k: float(v) for k, v in fused_scores.items() if isinstance(v, (int, float))},
+                        "component_contributions": risk_result.get("component_contributions", {}),
+                        "red_flags": fused_scores.get("red_flags", []),
+                        "candidate_domain": candidate_domain,
+                        "twin_domain": current_twin_domain,
+                        "no_twin": False,
+                    },
+                }
+        except Exception as e:
+            print(f"[AIService] Evaluation error for twin '{current_twin_domain}': {e}")
+            traceback.print_exc()
+
+    if best_response:
+        print(f"[AIService] Best twin match '{best_response['details']['twin_domain']}': "
+              f"status={best_response['status']}, risk_score={best_response['risk_score']}")
+        return best_response
+
+    return _no_twin_response(twin_domain)
 
 
 # ── Main entry point: HTML-first analysis ─────────────────────
@@ -421,10 +436,14 @@ def run_ai_analysis_from_html(
             "has_external_action": False, "external_action_domains": [],
         }
 
+    import re
+    title_match = re.search(r"<title[^>]*>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
+    extracted_title = title_match.group(1).strip() if title_match else ""
+
     candidate_evidence = {
         "candidate_url": candidate_url,
         "domain": candidate_domain,
-        "title": "",
+        "title": extracted_title,
         "screenshot_path": None,
         "logo_path": None,
         "visual_embedding": None,   # → visual similarity defaults to neutral

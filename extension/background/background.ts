@@ -27,23 +27,26 @@ const BADGE_COLORS: Record<string, string> = {
 };
 
 // ── Update Extension Badge ───────────────────────────────────
-function updateBadge(tabId: number, result: AnalysisResult | null): void {
+async function updateBadge(tabId: number, result: AnalysisResult | null): Promise<void> {
   try {
+    const tab = await chrome.tabs.get(tabId).catch(() => null);
+    if (!tab) return;
+
     if (!result) {
-      chrome.action.setBadgeText({ text: '', tabId });
+      await chrome.action.setBadgeText({ text: '', tabId }).catch(() => {});
       return;
     }
 
     const level = getRiskLevel(result.risk_score);
     const text = result.risk_score.toString();
 
-    chrome.action.setBadgeText({ text, tabId });
-    chrome.action.setBadgeBackgroundColor({ color: BADGE_COLORS[level] || '#64748b', tabId });
+    await chrome.action.setBadgeText({ text, tabId }).catch(() => {});
+    await chrome.action.setBadgeBackgroundColor({ color: BADGE_COLORS[level] || '#64748b', tabId }).catch(() => {});
     if (chrome.action.setBadgeTextColor) {
-      chrome.action.setBadgeTextColor({ color: '#ffffff', tabId });
+      await chrome.action.setBadgeTextColor({ color: '#ffffff', tabId }).catch(() => {});
     }
-  } catch (e) {
-    console.debug('[CTIP] Badge update failed:', e);
+  } catch {
+    // Safely ignore tab-closed or invalid tab errors
   }
 }
 
@@ -53,14 +56,11 @@ function resolveDisplayInfo(tabUrl?: string, tabDomain?: string): { domain: stri
   }
   try {
     const parsed = new URL(tabUrl);
-    if ((parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') && parsed.port === '8088') {
-      return {
-        domain: 'ycce-student-auth.xyz',
-        url: 'https://ycce-student-auth.xyz/login',
-      };
-    }
+    const resolvedDomain = (tabDomain && tabDomain.trim() && tabDomain !== '—') 
+      ? tabDomain.trim() 
+      : parsed.hostname;
     return {
-      domain: (tabDomain && tabDomain !== 'localhost' && tabDomain !== '127.0.0.1') ? tabDomain : parsed.hostname,
+      domain: resolvedDomain,
       url: tabUrl,
     };
   } catch {
@@ -69,22 +69,17 @@ function resolveDisplayInfo(tabUrl?: string, tabDomain?: string): { domain: stri
 }
 
 function getDomainKey(urlStr: string, defaultDomain: string): string {
-  if (defaultDomain && defaultDomain !== 'localhost' && defaultDomain !== '127.0.0.1') {
-    return defaultDomain.toLowerCase();
+  if (defaultDomain && defaultDomain.trim() && defaultDomain !== '—') {
+    return defaultDomain.trim().toLowerCase();
   }
   try {
     const parsed = new URL(urlStr);
-    if ((parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') && parsed.port === '8088') {
-      return 'ycce-student-auth.xyz';
-    }
-    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
-      return `${parsed.hostname}:${parsed.port || '80'}`;
-    }
     return parsed.hostname.toLowerCase();
   } catch {
-    return defaultDomain.toLowerCase();
+    return (defaultDomain || '').toLowerCase();
   }
 }
+
 
 // ── Handle Page Detection ────────────────────────────────────
 async function handleLoginDetected(
@@ -99,8 +94,9 @@ async function handleLoginDetected(
   };
   const domainKey = getDomainKey(effectivePayload.url, effectivePayload.domain);
 
-  // Check cache first (ignore 0-score cache for non-institutional domains)
-  const cached = await getCachedResult(domainKey);
+  // Bypass extension cache for local test phishing ports (so backend /api/analyze is always called)
+  const isTestPort = /:808[89]/.test(payload.url) || /:809[0-9]/.test(payload.url) || domainKey.includes('xyz');
+  const cached = isTestPort ? null : await getCachedResult(domainKey);
   if (cached && (cached.result.risk_score > 0 || domainKey.includes('ycce.edu'))) {
     console.log(`[CTIP] Cache hit for ${domainKey}: score=${cached.result.risk_score}`);
     tabStates.set(senderTabId, {
@@ -142,15 +138,21 @@ async function handleLoginDetected(
 }
 
 // ── Notify Content Script (for warning banner injection) ─────
-function notifyContentScript(tabId: number, result: AnalysisResult): void {
+async function notifyContentScript(tabId: number, result: AnalysisResult): Promise<void> {
   if (result.risk_score <= 50) return;
+  try {
+    const tab = await chrome.tabs.get(tabId).catch(() => null);
+    if (!tab) return;
 
-  chrome.tabs.sendMessage(tabId, {
-    type: 'ANALYSIS_RESULT',
-    payload: result,
-  } as ExtensionMessage).catch(() => {
-    // Content script might not be loaded yet
-  });
+    await chrome.tabs.sendMessage(tabId, {
+      type: 'ANALYSIS_RESULT',
+      payload: result,
+    } as ExtensionMessage).catch(() => {
+      // Content script might not be loaded yet
+    });
+  } catch {
+    // Content script might not be loaded yet or tab was closed
+  }
 }
 
 // ── Message Router ───────────────────────────────────────────
@@ -329,19 +331,19 @@ async function handlePopupStatusRequest(): Promise<PopupStatusResponse> {
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'loading') {
     tabStates.delete(tabId);
-    updateBadge(tabId, null);
+    updateBadge(tabId, null).catch(() => {});
   }
 });
 
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   try {
-    const tab = await chrome.tabs.get(activeInfo.tabId);
+    const tab = await chrome.tabs.get(activeInfo.tabId).catch(() => null);
     if (tab?.url && tab.url.startsWith('http')) {
       const domain = new URL(tab.url).hostname;
       const domainKey = getDomainKey(tab.url, domain);
       const state = tabStates.get(activeInfo.tabId);
       if (state?.result && state.domain === domainKey && (state.result.risk_score > 0 || domainKey.includes('ycce.edu'))) {
-        updateBadge(activeInfo.tabId, state.result);
+        updateBadge(activeInfo.tabId, state.result).catch(() => {});
       } else {
         const cached = await getCachedResult(domainKey);
         if (cached && (cached.result.risk_score > 0 || domainKey.includes('ycce.edu'))) {
@@ -351,7 +353,7 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
             result: cached.result,
             cachedAt: cached.cachedAt,
           });
-          updateBadge(activeInfo.tabId, cached.result);
+          updateBadge(activeInfo.tabId, cached.result).catch(() => {});
         }
       }
     }

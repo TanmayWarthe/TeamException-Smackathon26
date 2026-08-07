@@ -2,6 +2,9 @@ import json
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse
+import os
+from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 
@@ -109,3 +112,14 @@ async def root_index():
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "service": settings.PROJECT_NAME, "version": settings.VERSION}
+
+@app.get("/api/screenshots/view")
+async def get_screenshot_view(path: str):
+    if not path:
+        return {"error": "Path required"}
+    p = Path(path)
+    if not p.is_absolute():
+        p = Path(__file__).resolve().parent.parent.parent / path
+    if p.exists() and p.is_file():
+        return FileResponse(str(p))
+    return {"error": "File not found"}

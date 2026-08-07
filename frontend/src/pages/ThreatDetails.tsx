@@ -223,14 +223,28 @@ export default function ThreatDetails() {
             <h3 className="text-slate-900 font-semibold text-sm">Suspicious Candidate Page</h3>
             <span className="text-xs text-red-600 font-semibold">Malicious Clone</span>
           </div>
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 h-52 flex flex-col justify-between">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 min-h-64 flex flex-col justify-between space-y-3">
             <div className="space-y-1 text-xs">
               <p className="text-slate-600">Captured DOM Title: <strong className="text-slate-900">{threat.evidence?.dom_title || threat.domain}</strong></p>
               <p className="text-slate-600">Action Endpoint: <strong className="text-red-600">{threat.evidence?.action_endpoint || threat.url}</strong></p>
             </div>
-            <div className="bg-white rounded-lg p-3 border border-slate-200 text-[11px] text-slate-600">
-              Screenshot Evidence: {threat.screenshot_path || `evidence/${threat.domain}.png`}
-            </div>
+            
+            {threat.screenshot_path ? (
+              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white max-h-48 flex items-center justify-center">
+                <img 
+                  src={`http://localhost:8000/api/screenshots/view?path=${encodeURIComponent(threat.screenshot_path)}`}
+                  alt="Candidate Screenshot Evidence"
+                  className="w-full h-full object-cover object-top hover:object-scale-down transition-all duration-300"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none'
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg p-3 border border-slate-200 text-[11px] text-slate-500 italic text-center">
+                No Visual Screenshot Available (DOM & Form Evidence Analyzed)
+              </div>
+            )}
           </div>
         </div>
 
@@ -239,13 +253,26 @@ export default function ThreatDetails() {
             <h3 className="text-slate-900 font-semibold text-sm">Official Digital Twin Baseline</h3>
             <span className="text-xs text-emerald-600 font-semibold">Protected Baseline</span>
           </div>
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 h-52 flex flex-col justify-between">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 min-h-64 flex flex-col justify-between space-y-3">
             <div className="space-y-1 text-xs">
               <p className="text-slate-600">Baseline Domain: <strong className="text-emerald-700">{
-                threat.matched_twin?.domain ||
-                (threat.matched_twin?.official_url ? new URL(threat.matched_twin.official_url).hostname : '') ||
-                (threat.targeted_portal && threat.targeted_portal.includes('.') && !threat.targeted_portal.includes(' ') ? threat.targeted_portal : '') ||
-                'Unregistered Digital Twin'
+                (() => {
+                  if (threat.matched_twin?.domain) return threat.matched_twin.domain;
+                  if (threat.matched_twin?.official_url) {
+                    try {
+                      const urlStr = threat.matched_twin.official_url.startsWith('http') 
+                        ? threat.matched_twin.official_url 
+                        : `https://${threat.matched_twin.official_url}`;
+                      return new URL(urlStr).hostname;
+                    } catch {
+                      return threat.matched_twin.official_url;
+                    }
+                  }
+                  if (threat.targeted_portal && threat.targeted_portal.includes('.') && !threat.targeted_portal.includes(' ')) {
+                    return threat.targeted_portal;
+                  }
+                  return threat.targeted_portal || 'Unregistered Digital Twin';
+                })()
               }</strong></p>
               <p className="text-slate-600">Baseline Name: <strong className="text-slate-900">{
                 threat.matched_twin?.website_name ||
@@ -253,9 +280,23 @@ export default function ThreatDetails() {
                 'Unregistered Digital Twin'
               }</strong></p>
             </div>
-            <div className="bg-white rounded-lg p-3 border border-slate-200 text-[11px] text-slate-600">
-              Screenshot Baseline: {threat.official_screenshot_path || (threat.matched_twin?.domain ? `evidence/${threat.matched_twin.domain}_baseline.png` : 'Not Available')}
-            </div>
+
+            {threat.official_screenshot_path ? (
+              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white max-h-48 flex items-center justify-center">
+                <img 
+                  src={`http://localhost:8000/api/screenshots/view?path=${encodeURIComponent(threat.official_screenshot_path)}`}
+                  alt="Baseline Digital Twin Screenshot"
+                  className="w-full h-full object-cover object-top hover:object-scale-down transition-all duration-300"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none'
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg p-3 border border-slate-200 text-[11px] text-slate-500 italic text-center">
+                No Baseline Screenshot Captured for this Digital Twin
+              </div>
+            )}
           </div>
         </div>
       </div>

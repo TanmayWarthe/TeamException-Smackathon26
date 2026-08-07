@@ -129,15 +129,19 @@ export async function analyzeSite(payload: CandidateWebsite): Promise<AnalysisRe
     if (res.ok) {
       const data = await res.json();
       const score = data.risk_score ?? 0;
+      const twinStr = typeof data.matched_twin === 'object' && data.matched_twin !== null
+        ? (data.matched_twin.website_name || data.matched_twin.domain || '')
+        : (typeof data.matched_twin === 'string' ? data.matched_twin : '');
+
       return {
         status: data.status || statusLabel(score),
         risk_score: score,
         confidence: data.confidence ?? 85,
         recommendation: data.recommendation || recommendationFromScore(score),
         reasons: Array.isArray(data.reasons) && data.reasons.length > 0 ? data.reasons : [
-          data.matched_twin ? `Compared against twin: ${data.matched_twin}` : 'Live DOM & visual risk analysis completed'
+          twinStr ? `Compared against twin: ${twinStr}` : 'Live DOM & visual risk analysis completed'
         ],
-        matched_twin: data.matched_twin || undefined,
+        matched_twin: twinStr || undefined,
         source: 'backend' as const,
       };
     }

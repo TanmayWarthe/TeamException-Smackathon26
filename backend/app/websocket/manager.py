@@ -80,7 +80,9 @@ class ConnectionManager:
         await self.broadcast({
             "type": "THREAT_STATUS_CHANGED",
             "data": {
-                "threat_id": threat_id,
+                "id": str(threat_id),
+                "threat_id": str(threat_id),
+                "status": status,
                 "threat_status": status,
                 "notes": notes,
             },
@@ -89,14 +91,14 @@ class ConnectionManager:
     async def broadcast_digital_twin(self, twin_data: Dict[str, Any]) -> None:
         """Broadcast when an official digital twin is registered."""
         await self.broadcast({
-            "type": "TWIN_CREATED",
+            "type": "DIGITAL_TWIN_CREATED",
             "data": twin_data,
         })
 
     async def broadcast_notification(self, notification_data: Dict[str, Any]) -> None:
         """Broadcast SOC alert notifications."""
         await self.broadcast({
-            "type": "NOTIFICATION_CREATED",
+            "type": "NEW_NOTIFICATION",
             "data": notification_data,
         })
 
