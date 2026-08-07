@@ -93,10 +93,19 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             threat_status: (data.threat_status as Threat['threat_status']) || 'ACTIVE',
             detected_at: data.detected_at || new Date().toISOString(),
             screenshot_path: data.screenshot_path || '',
+            official_screenshot_path: data.official_screenshot_path,
             recommendation: data.recommendation,
             ip_address: data.ip_address,
             registrar: data.registrar,
             ssl_status: data.ssl_status,
+            risk_level: data.risk_level,
+            reasons: data.reasons,
+            similarity_report: data.similarity_report,
+            risk_breakdown: data.risk_breakdown,
+            explanation: data.explanation,
+            evidence: data.evidence,
+            timeline: data.timeline,
+            matched_twin: data.matched_twin,
           };
 
           setLatestThreat(incomingThreat);

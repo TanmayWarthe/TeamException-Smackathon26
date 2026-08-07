@@ -51,6 +51,7 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
 
     # Resolve submitted HTML — prefer explicit `html`, fall back to `domSnapshot`/`dom_snapshot`
     submitted_html = req.html or req.domSnapshot or req.dom_snapshot
+    target_twin = (req.twin_domain or req.target_twin or "").strip() or None
 
     # ── Run the real AI pipeline ──────────────────────────────
     if submitted_html:
@@ -58,10 +59,14 @@ async def analyze_candidate(req: CandidateAnalyzeRequest, db: AsyncSession = Dep
         result = run_ai_analysis_from_html(
             candidate_url=candidate_url,
             html=submitted_html,
+            twin_domain=target_twin,
         )
     else:
         # URL path: fetch + render via Playwright (evidence-engine pipeline)
-        result = await run_ai_analysis(candidate_url=candidate_url)
+        result = await run_ai_analysis(
+            candidate_url=candidate_url,
+            twin_domain=target_twin,
+        )
 
     risk_score = int(result.get("risk_score", 0))
     status = result.get("status", "UNKNOWN")

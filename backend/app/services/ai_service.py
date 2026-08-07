@@ -283,24 +283,33 @@ def _evaluate_candidate_evidence(
     twins_to_evaluate = []
     try:
         twin_store = _get_twin_store()
-        exact_twin = twin_store.load_twin(twin_domain)
-        if exact_twin:
-            twins_to_evaluate.append((twin_domain, exact_twin))
         
-        # Load all registered twins as candidates if no exact match or to find best visual/DOM fit
-        all_twins = twin_store.load_all_twins()
-        for t in all_twins:
-            t_dom = t.get("domain") or twin_domain
-            if not exact_twin or t_dom != twin_domain:
+        # If an explicit twin_domain is provided, prioritize and lock onto it
+        if twin_domain:
+            exact_twin = twin_store.load_twin(twin_domain)
+            if not exact_twin and "www." in twin_domain:
+                exact_twin = twin_store.load_twin(twin_domain.replace("www.", ""))
+            if not exact_twin and not twin_domain.startswith("www."):
+                exact_twin = twin_store.load_twin(f"www.{twin_domain}")
+
+            if exact_twin:
+                # Target twin explicitly found — evaluate directly against this target
+                twins_to_evaluate.append((exact_twin.get("domain") or twin_domain, exact_twin))
+
+        # If no explicit twin or explicit twin not found, load all registered twins for smart matching
+        if not twins_to_evaluate:
+            all_twins = twin_store.load_all_twins()
+            for t in all_twins:
+                t_dom = t.get("domain") or "default_portal"
                 twins_to_evaluate.append((t_dom, t))
     except Exception as e:
         print(f"[AIService] ERROR loading twin store: {e}")
         traceback.print_exc()
-        return _no_twin_response(twin_domain)
+        return _no_twin_response(twin_domain or "unknown")
 
     if not twins_to_evaluate:
         print(f"[AIService] No twins registered in system. Returning UNKNOWN status.")
-        return _no_twin_response(twin_domain)
+        return _no_twin_response(twin_domain or "unknown")
 
     fusion_mod = _get_feature_fusion()
     scoring_mod = _get_scoring()
@@ -380,7 +389,7 @@ def _evaluate_candidate_evidence(
 def run_ai_analysis_from_html(
     candidate_url: str,
     html: str,
-    twin_domain: str = "ycce.edu",
+    twin_domain: Optional[str] = None,
 ) -> dict[str, Any]:
     """
     Analyse a candidate page using its submitted HTML directly.
@@ -392,7 +401,7 @@ def run_ai_analysis_from_html(
     Args:
         candidate_url: The URL of the page being checked.
         html: The raw HTML of the candidate page.
-        twin_domain: Domain of the Digital Twin to compare against.
+        twin_domain: Optional domain of the Digital Twin to compare against.
 
     Returns:
         Standard analysis dict. If no twin exists → UNKNOWN result.
@@ -459,7 +468,7 @@ def run_ai_analysis_from_html(
 # ── URL-based analysis (uses Playwright) ──────────────────────
 async def run_ai_analysis(
     candidate_url: str,
-    twin_domain: str = "ycce.edu",
+    twin_domain: Optional[str] = None,
 ) -> dict[str, Any]:
     """
     Run full AI analysis by fetching and rendering the URL via Playwright (async).

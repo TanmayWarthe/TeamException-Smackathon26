@@ -31,6 +31,19 @@ export interface Threat {
   ip_address?: string;
   registrar?: string;
   ssl_status?: string;
+  risk_level?: string;
+  reasons?: string[];
+  similarity_report?: SimilarityReport;
+  risk_breakdown?: RiskBreakdownItem[];
+  explanation?: ThreatExplanation;
+  evidence?: ThreatEvidence;
+  timeline?: TimelineItem[];
+  admin_notes?: string;
+  matched_twin?: {
+    website_name?: string;
+    domain?: string;
+    official_url?: string;
+  };
 }
 
 export interface SimilarityReport {

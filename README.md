@@ -34,15 +34,25 @@ AI-driven defense system against campus credential phishing, visual brand spoofi
 | **API Documentation** | [http://localhost:8000/docs](http://localhost:8000/docs) | Interactive Swagger UI |
 | **Alternative Docs** | [http://localhost:8000/redoc](http://localhost:8000/redoc) | ReDoc API specification |
 
-### 🔑 Default Admin Account
-- **Email:** `admin@ycce.edu.in`
-- **Password:** `password123`
+### 🔑 Authorized SOC Admin Accounts
+
+| Admin Email / Username | Password | Role / Scope |
+| :--- | :--- | :--- |
+| `admin@ycce.edu.in` | `password123` | SOC Lead Analyst (Default) |
+| `admin@ycce.edu` | `admin123` | Institutional Administrator |
+| `admin@ctip.security` | `ctip@admin2026` | SOC Security Operations Center |
+| `admin111@gmail.com` | `password123` | Backup SOC Analyst |
+| `admin@college.edu` | `password123` | Academic Partner Admin |
+| `admin` | `password123` | Local Quick-Login ID |
 
 ---
 
 ## 🧩 Browser Extension Setup (Optional)
 
 CTIP includes real-time browser protection for students & staff:
+- **Warning Threshold:** Triggers phishing warning banner when `risk_score >= 70`.
+- **Interception:** Blocks credential submission when `risk_score >= 90` (`CRITICAL`).
+- **Cache TTL:** Caches domain analysis results for **5 minutes** (`300,000 ms`) to optimize responsiveness and ensure freshness.
 
 ### Chrome / Brave / Edge
 1. Navigate to `chrome://extensions/`
@@ -97,6 +107,31 @@ npm run dev
 # Test AI similarity & Digital Twin pipeline
 ./venv/bin/python scripts/test_ai_pipeline.py
 ```
+
+## 🧠 AI Phishing Detection Architecture
+
+CTIP uses a multi-layered hybrid scoring engine combining visual embeddings, DOM structure, and behavioral heuristics:
+
+### 7-Layer Feature Fusion Weights
+
+| Layer | Feature | Weight | Description |
+| :--- | :--- | :--- | :--- |
+| 1 | **Visual Similarity** | **25%** | CLIP ViT image embeddings & structural layout cosine similarity |
+| 2 | **DOM Structural Similarity** | **20%** | HTML tag frequency, hierarchy depth, and structural tree alignment |
+| 3 | **Form Action Similarity** | **20%** | Input field analysis, password credential harvesting, and action target |
+| 4 | **JavaScript Behaviour** | **15%** | Event listener hooks, obfuscated eval patterns, and exfiltration scripts |
+| 5 | **Logo Similarity** | **10%** | Institutional seal and favicon perceptual hashing & CLIP matching |
+| 6 | **URL Intelligence** | **5%** | Levenshtein typosquatting, IDN homoglyph detection, entropy analysis |
+| 7 | **SSL / Domain Trust** | **5%** | Certificate validity, issuer trust, and official domain whitelist |
+
+### 🎯 Risk Tiers & Action Policies
+
+| Risk Score | Tier | Action Taken |
+| :--- | :--- | :--- |
+| **0 – 29** | `TRUSTED` / `LOW` | **ALLOW**: Traffic permitted without interruption |
+| **30 – 69** | `SUSPICIOUS` | **MONITOR**: Logged to SOC dashboard with warning badge |
+| **70 – 89** | `HIGH` | **WARN**: Extension displays prominent phishing warning banner |
+| **90 – 100** | `CRITICAL` | **BLOCK**: Immediate credential submission interception & SOC high-priority alert |
 
 ---
 

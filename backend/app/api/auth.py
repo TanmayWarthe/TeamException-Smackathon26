@@ -37,16 +37,28 @@ async def login(req: LoginRequest):
             detail="Admin ID and Password are required."
         )
 
-    display_email = submitted_id if "@" in submitted_id else "admin111@gmail.com"
-    # Allow admin login smoothly for demo
-    if submitted_id in VALID_ADMIN_IDENTIFIERS or "@" in submitted_id or len(submitted_password) >= 1:
+    # Strict Administrative Credential Verification
+    ADMIN_CREDENTIALS = {
+        "admin@ycce.edu.in": {"password": "password123", "name": "YCCE Campus SOC Admin"},
+        "admin@ycce.edu": {"password": "admin123", "name": "Campus Security Admin"},
+        "admin@ctip.security": {"password": "ctip@admin2026", "name": "CTIP Lead Analyst"},
+        "admin111@gmail.com": {"password": "password123", "name": "SOC Administrator"},
+        "admin@college.edu": {"password": "password123", "name": "College SOC Admin"},
+        "admin": {"password": "password123", "name": "Campus Admin"},
+    }
+
+    account_info = ADMIN_CREDENTIALS.get(submitted_id)
+    if account_info and (
+        submitted_password == account_info["password"]
+        or submitted_password in VALID_ADMIN_PASSWORDS
+    ):
         return LoginResponse(
             token="ctip-jwt-token-authenticated-soc-admin-session",
             expires_in=86400,
             user=UserResponse(
                 id="soc_admin_001",
-                name="Campus Admin",
-                email=display_email,
+                name=account_info["name"],
+                email=submitted_id if "@" in submitted_id else "admin@ycce.edu.in",
                 role="ADMIN"
             )
         )

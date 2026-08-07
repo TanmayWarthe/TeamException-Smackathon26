@@ -1,0 +1,19 @@
+{
+  "website_name": "UK Government",
+  "domain": "gov.uk",
+  "official_url": "https://gov.uk",
+  "category": "Government",
+  "fingerprint_version": 1,
+  "screenshot_path": "",
+  "created_at": "2026-08-07T04:45:36.235363+00:00",
+  "updated_at": "2026-08-07T04:45:36.235370+00:00",
+  "dom_fingerprint": {
+    "total_elements": 0,
+    "forms": [],
+    "inputs": [],
+    "buttons": []
+  },
+  "css_colors": [],
+  "visual_embedding": null,
+  "logo_embedding": null
+}

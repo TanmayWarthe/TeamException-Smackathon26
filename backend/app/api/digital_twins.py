@@ -175,9 +175,22 @@ async def delete_digital_twin(twin_id: str, db: AsyncSession = Depends(get_db)):
     if not twin:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Digital Twin not found")
 
+    twin_domain = twin.domain or (urlparse(twin.official_url).hostname if twin.official_url else None)
+
     try:
         await db.delete(twin)
         await db.commit()
+
+        # Synchronize deletion with filesystem twin store
+        if twin_domain:
+            try:
+                from ..services.ai_service import _get_twin_store
+                twin_store = _get_twin_store()
+                twin_store.delete_twin(twin_domain)
+                if twin_domain.startswith("www."):
+                    twin_store.delete_twin(twin_domain.replace("www.", ""))
+            except Exception as store_err:
+                print(f"[DigitalTwinAPI] Note: Filesystem twin cleanup: {store_err}")
 
         await ws_manager.broadcast({
             "type": "DIGITAL_TWIN_DELETED",

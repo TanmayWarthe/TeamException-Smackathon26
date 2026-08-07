@@ -1,0 +1,19 @@
+{
+  "website_name": "CBSE",
+  "domain": "cbse.gov.in",
+  "official_url": "https://cbse.gov.in",
+  "category": "Education",
+  "fingerprint_version": 1,
+  "screenshot_path": "",
+  "created_at": "2026-08-07T04:45:36.227756+00:00",
+  "updated_at": "2026-08-07T04:45:36.227808+00:00",
+  "dom_fingerprint": {
+    "total_elements": 0,
+    "forms": [],
+    "inputs": [],
+    "buttons": []
+  },
+  "css_colors": [],
+  "visual_embedding": null,
+  "logo_embedding": null
+}

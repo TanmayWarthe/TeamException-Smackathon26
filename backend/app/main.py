@@ -6,7 +6,8 @@ from fastapi.responses import FileResponse
 import os
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import select
+from sqlalchemy import select, func
+from datetime import datetime, timezone
 
 from .config.settings import settings
 from .database.session import engine, Base, AsyncSessionLocal
@@ -24,8 +25,33 @@ manager = ws_manager
 
 async def seed_initial_data():
     async with AsyncSessionLocal() as session:
-        # Database initializes clean without pre-populated fake threats
-        pass
+        # Check if twins already seeded
+        res = await session.execute(select(func.count(DigitalTwinModel.id)))
+        count = res.scalar() or 0
+        if count == 0:
+            dataset_path = Path(__file__).resolve().parent.parent.parent / "legitimate_domains_dataset.json"
+            if dataset_path.exists():
+                try:
+                    with open(dataset_path, "r", encoding="utf-8") as f:
+                        items = json.load(f)
+                    for item in items:
+                        domain = item.get("domain", "").strip().lower()
+                        name = item.get("website_name", "").strip()
+                        url = item.get("official_url", "").strip()
+                        if domain and url:
+                            session.add(DigitalTwinModel(
+                                website_name=name,
+                                official_url=url,
+                                domain=domain,
+                                fingerprint_version=1,
+                                screenshot_path="",
+                                created_at=datetime.now(timezone.utc),
+                                updated_at=datetime.now(timezone.utc),
+                            ))
+                    await session.commit()
+                    print(f"[Startup] Automatically seeded {len(items)} legitimate domain twins into database.")
+                except Exception as e:
+                    print(f"[Startup] Dataset seeding notice: {e}")
 
 def prewarm_clip():
     try:

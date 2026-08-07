@@ -25,7 +25,7 @@ from typing import Any, Optional
 
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from shared.config import TWINS_DIR, EMBEDDINGS_DIR, sanitize_domain
+from shared.config import TWINS_DIR, EMBEDDINGS_DIR, SCREENSHOTS_DIR, LOGOS_DIR, sanitize_domain
 
 
 def _twin_path(domain: str) -> Path:
@@ -148,11 +148,29 @@ def list_twins() -> list[dict[str, Any]]:
 
 
 def delete_twin(domain: str) -> bool:
-    """Delete a stored Digital Twin and its embeddings."""
+    """Delete a stored Digital Twin, its embeddings, and associated screenshot/logo files."""
+    sanitized = sanitize_domain(domain)
     json_path = _twin_path(domain)
     deleted = False
 
+    # Read twin metadata before deleting JSON to clean up any explicit paths
     if json_path.exists():
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                twin_data = json.load(f)
+                custom_shot = twin_data.get("screenshot_path")
+                if custom_shot:
+                    custom_shot_p = Path(custom_shot)
+                    if custom_shot_p.exists() and custom_shot_p.is_file():
+                        custom_shot_p.unlink()
+                custom_logo = twin_data.get("logo_path")
+                if custom_logo:
+                    custom_logo_p = Path(custom_logo)
+                    if custom_logo_p.exists() and custom_logo_p.is_file():
+                        custom_logo_p.unlink()
+        except Exception:
+            pass
+
         json_path.unlink()
         deleted = True
 
@@ -160,6 +178,17 @@ def delete_twin(domain: str) -> bool:
         npy_path = _embedding_path(domain, kind)
         if npy_path.exists():
             npy_path.unlink()
+            deleted = True
+
+    # Also clean up standard named screenshot and logo files if present
+    for ext in [".png", ".jpg", ".jpeg", ".webp"]:
+        shot_path = SCREENSHOTS_DIR / f"{sanitized}{ext}"
+        if shot_path.exists() and shot_path.is_file():
+            shot_path.unlink()
+            deleted = True
+        logo_path = LOGOS_DIR / f"{sanitized}{ext}"
+        if logo_path.exists() and logo_path.is_file():
+            logo_path.unlink()
             deleted = True
 
     return deleted

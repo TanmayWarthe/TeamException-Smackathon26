@@ -5,7 +5,7 @@
 import { AnalysisResult, CachedAnalysis } from '../shared/types';
 
 const CACHE_PREFIX = 'ctip_cache_';
-const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes TTL
 
 /**
  * Build the storage key for a domain.

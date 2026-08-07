@@ -30,6 +30,9 @@ class CandidateAnalyzeRequest(BaseModel):
     buttonLabels: Optional[list[str]] = []
     logoSrc: Optional[str] = None
     timestamp: Optional[str] = None
+    twin_domain: Optional[str] = None   # Explicit digital twin target to analyze against
+    target_twin: Optional[str] = None   # Alias for twin_domain
+    target_portal: Optional[str] = None # Name of portal targeted
 
 class AnalysisResponse(BaseModel):
     status: str

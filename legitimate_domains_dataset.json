@@ -1,0 +1,1094 @@
+[
+  {
+    "domain": "amazon.com",
+    "website_name": "Amazon",
+    "category": "E-commerce",
+    "official_url": "https://amazon.com"
+  },
+  {
+    "domain": "ebay.com",
+    "website_name": "eBay",
+    "category": "E-commerce",
+    "official_url": "https://ebay.com"
+  },
+  {
+    "domain": "walmart.com",
+    "website_name": "Walmart",
+    "category": "E-commerce",
+    "official_url": "https://walmart.com"
+  },
+  {
+    "domain": "target.com",
+    "website_name": "Target",
+    "category": "E-commerce",
+    "official_url": "https://target.com"
+  },
+  {
+    "domain": "bestbuy.com",
+    "website_name": "Best Buy",
+    "category": "E-commerce",
+    "official_url": "https://bestbuy.com"
+  },
+  {
+    "domain": "etsy.com",
+    "website_name": "Etsy",
+    "category": "E-commerce",
+    "official_url": "https://etsy.com"
+  },
+  {
+    "domain": "aliexpress.com",
+    "website_name": "AliExpress",
+    "category": "E-commerce",
+    "official_url": "https://aliexpress.com"
+  },
+  {
+    "domain": "alibaba.com",
+    "website_name": "Alibaba",
+    "category": "E-commerce",
+    "official_url": "https://alibaba.com"
+  },
+  {
+    "domain": "shopify.com",
+    "website_name": "Shopify",
+    "category": "E-commerce",
+    "official_url": "https://shopify.com"
+  },
+  {
+    "domain": "flipkart.com",
+    "website_name": "Flipkart",
+    "category": "E-commerce",
+    "official_url": "https://flipkart.com"
+  },
+  {
+    "domain": "myntra.com",
+    "website_name": "Myntra",
+    "category": "E-commerce",
+    "official_url": "https://myntra.com"
+  },
+  {
+    "domain": "ikea.com",
+    "website_name": "IKEA",
+    "category": "E-commerce",
+    "official_url": "https://ikea.com"
+  },
+  {
+    "domain": "costco.com",
+    "website_name": "Costco",
+    "category": "E-commerce",
+    "official_url": "https://costco.com"
+  },
+  {
+    "domain": "homedepot.com",
+    "website_name": "Home Depot",
+    "category": "E-commerce",
+    "official_url": "https://homedepot.com"
+  },
+  {
+    "domain": "wayfair.com",
+    "website_name": "Wayfair",
+    "category": "E-commerce",
+    "official_url": "https://wayfair.com"
+  },
+  {
+    "domain": "meesho.com",
+    "website_name": "Meesho",
+    "category": "E-commerce",
+    "official_url": "https://meesho.com"
+  },
+  {
+    "domain": "nykaa.com",
+    "website_name": "Nykaa",
+    "category": "E-commerce",
+    "official_url": "https://nykaa.com"
+  },
+  {
+    "domain": "zalando.com",
+    "website_name": "Zalando",
+    "category": "E-commerce",
+    "official_url": "https://zalando.com"
+  },
+  {
+    "domain": "chase.com",
+    "website_name": "Chase Bank",
+    "category": "Banking/Finance",
+    "official_url": "https://chase.com"
+  },
+  {
+    "domain": "bankofamerica.com",
+    "website_name": "Bank of America",
+    "category": "Banking/Finance",
+    "official_url": "https://bankofamerica.com"
+  },
+  {
+    "domain": "wellsfargo.com",
+    "website_name": "Wells Fargo",
+    "category": "Banking/Finance",
+    "official_url": "https://wellsfargo.com"
+  },
+  {
+    "domain": "citibank.com",
+    "website_name": "Citibank",
+    "category": "Banking/Finance",
+    "official_url": "https://citibank.com"
+  },
+  {
+    "domain": "hsbc.com",
+    "website_name": "HSBC",
+    "category": "Banking/Finance",
+    "official_url": "https://hsbc.com"
+  },
+  {
+    "domain": "icicibank.com",
+    "website_name": "ICICI Bank",
+    "category": "Banking/Finance",
+    "official_url": "https://icicibank.com"
+  },
+  {
+    "domain": "hdfcbank.com",
+    "website_name": "HDFC Bank",
+    "category": "Banking/Finance",
+    "official_url": "https://hdfcbank.com"
+  },
+  {
+    "domain": "onlinesbi.sbi",
+    "website_name": "State Bank of India",
+    "category": "Banking/Finance",
+    "official_url": "https://onlinesbi.sbi"
+  },
+  {
+    "domain": "axisbank.com",
+    "website_name": "Axis Bank",
+    "category": "Banking/Finance",
+    "official_url": "https://axisbank.com"
+  },
+  {
+    "domain": "paypal.com",
+    "website_name": "PayPal",
+    "category": "Banking/Finance",
+    "official_url": "https://paypal.com"
+  },
+  {
+    "domain": "stripe.com",
+    "website_name": "Stripe",
+    "category": "Banking/Finance",
+    "official_url": "https://stripe.com"
+  },
+  {
+    "domain": "americanexpress.com",
+    "website_name": "American Express",
+    "category": "Banking/Finance",
+    "official_url": "https://americanexpress.com"
+  },
+  {
+    "domain": "capitalone.com",
+    "website_name": "Capital One",
+    "category": "Banking/Finance",
+    "official_url": "https://capitalone.com"
+  },
+  {
+    "domain": "usbank.com",
+    "website_name": "U.S. Bank",
+    "category": "Banking/Finance",
+    "official_url": "https://usbank.com"
+  },
+  {
+    "domain": "barclays.co.uk",
+    "website_name": "Barclays",
+    "category": "Banking/Finance",
+    "official_url": "https://barclays.co.uk"
+  },
+  {
+    "domain": "standardchartered.com",
+    "website_name": "Standard Chartered",
+    "category": "Banking/Finance",
+    "official_url": "https://standardchartered.com"
+  },
+  {
+    "domain": "mastercard.com",
+    "website_name": "Mastercard",
+    "category": "Banking/Finance",
+    "official_url": "https://mastercard.com"
+  },
+  {
+    "domain": "visa.com",
+    "website_name": "Visa",
+    "category": "Banking/Finance",
+    "official_url": "https://visa.com"
+  },
+  {
+    "domain": "wise.com",
+    "website_name": "Wise",
+    "category": "Banking/Finance",
+    "official_url": "https://wise.com"
+  },
+  {
+    "domain": "revolut.com",
+    "website_name": "Revolut",
+    "category": "Banking/Finance",
+    "official_url": "https://revolut.com"
+  },
+  {
+    "domain": "paytm.com",
+    "website_name": "Paytm",
+    "category": "Banking/Finance",
+    "official_url": "https://paytm.com"
+  },
+  {
+    "domain": "phonepe.com",
+    "website_name": "PhonePe",
+    "category": "Banking/Finance",
+    "official_url": "https://phonepe.com"
+  },
+  {
+    "domain": "gmail.com",
+    "website_name": "Gmail",
+    "category": "Webmail/Email",
+    "official_url": "https://gmail.com"
+  },
+  {
+    "domain": "outlook.com",
+    "website_name": "Outlook",
+    "category": "Webmail/Email",
+    "official_url": "https://outlook.com"
+  },
+  {
+    "domain": "yahoo.com",
+    "website_name": "Yahoo Mail",
+    "category": "Webmail/Email",
+    "official_url": "https://yahoo.com"
+  },
+  {
+    "domain": "protonmail.com",
+    "website_name": "ProtonMail",
+    "category": "Webmail/Email",
+    "official_url": "https://protonmail.com"
+  },
+  {
+    "domain": "icloud.com",
+    "website_name": "iCloud Mail",
+    "category": "Webmail/Email",
+    "official_url": "https://icloud.com"
+  },
+  {
+    "domain": "zoho.com",
+    "website_name": "Zoho Mail",
+    "category": "Webmail/Email",
+    "official_url": "https://zoho.com"
+  },
+  {
+    "domain": "aol.com",
+    "website_name": "AOL Mail",
+    "category": "Webmail/Email",
+    "official_url": "https://aol.com"
+  },
+  {
+    "domain": "gmx.com",
+    "website_name": "GMX Mail",
+    "category": "Webmail/Email",
+    "official_url": "https://gmx.com"
+  },
+  {
+    "domain": "yandex.com",
+    "website_name": "Yandex Mail",
+    "category": "Webmail/Email",
+    "official_url": "https://yandex.com"
+  },
+  {
+    "domain": "mit.edu",
+    "website_name": "MIT",
+    "category": "Education",
+    "official_url": "https://mit.edu"
+  },
+  {
+    "domain": "harvard.edu",
+    "website_name": "Harvard University",
+    "category": "Education",
+    "official_url": "https://harvard.edu"
+  },
+  {
+    "domain": "stanford.edu",
+    "website_name": "Stanford University",
+    "category": "Education",
+    "official_url": "https://stanford.edu"
+  },
+  {
+    "domain": "berkeley.edu",
+    "website_name": "UC Berkeley",
+    "category": "Education",
+    "official_url": "https://berkeley.edu"
+  },
+  {
+    "domain": "ox.ac.uk",
+    "website_name": "University of Oxford",
+    "category": "Education",
+    "official_url": "https://ox.ac.uk"
+  },
+  {
+    "domain": "cam.ac.uk",
+    "website_name": "University of Cambridge",
+    "category": "Education",
+    "official_url": "https://cam.ac.uk"
+  },
+  {
+    "domain": "iitb.ac.in",
+    "website_name": "IIT Bombay",
+    "category": "Education",
+    "official_url": "https://iitb.ac.in"
+  },
+  {
+    "domain": "iitd.ac.in",
+    "website_name": "IIT Delhi",
+    "category": "Education",
+    "official_url": "https://iitd.ac.in"
+  },
+  {
+    "domain": "du.ac.in",
+    "website_name": "University of Delhi",
+    "category": "Education",
+    "official_url": "https://du.ac.in"
+  },
+  {
+    "domain": "jnu.ac.in",
+    "website_name": "Jawaharlal Nehru University",
+    "category": "Education",
+    "official_url": "https://jnu.ac.in"
+  },
+  {
+    "domain": "coursera.org",
+    "website_name": "Coursera",
+    "category": "Education",
+    "official_url": "https://coursera.org"
+  },
+  {
+    "domain": "edx.org",
+    "website_name": "edX",
+    "category": "Education",
+    "official_url": "https://edx.org"
+  },
+  {
+    "domain": "khanacademy.org",
+    "website_name": "Khan Academy",
+    "category": "Education",
+    "official_url": "https://khanacademy.org"
+  },
+  {
+    "domain": "udemy.com",
+    "website_name": "Udemy",
+    "category": "Education",
+    "official_url": "https://udemy.com"
+  },
+  {
+    "domain": "nptel.ac.in",
+    "website_name": "NPTEL",
+    "category": "Education",
+    "official_url": "https://nptel.ac.in"
+  },
+  {
+    "domain": "ugc.ac.in",
+    "website_name": "University Grants Commission (India)",
+    "category": "Education",
+    "official_url": "https://ugc.ac.in"
+  },
+  {
+    "domain": "cbse.gov.in",
+    "website_name": "CBSE",
+    "category": "Education",
+    "official_url": "https://cbse.gov.in"
+  },
+  {
+    "domain": "aicte-india.org",
+    "website_name": "AICTE",
+    "category": "Education",
+    "official_url": "https://aicte-india.org"
+  },
+  {
+    "domain": "irs.gov",
+    "website_name": "IRS",
+    "category": "Government",
+    "official_url": "https://irs.gov"
+  },
+  {
+    "domain": "usa.gov",
+    "website_name": "USA.gov",
+    "category": "Government",
+    "official_url": "https://usa.gov"
+  },
+  {
+    "domain": "whitehouse.gov",
+    "website_name": "The White House",
+    "category": "Government",
+    "official_url": "https://whitehouse.gov"
+  },
+  {
+    "domain": "india.gov.in",
+    "website_name": "National Portal of India",
+    "category": "Government",
+    "official_url": "https://india.gov.in"
+  },
+  {
+    "domain": "gov.uk",
+    "website_name": "UK Government",
+    "category": "Government",
+    "official_url": "https://gov.uk"
+  },
+  {
+    "domain": "canada.ca",
+    "website_name": "Government of Canada",
+    "category": "Government",
+    "official_url": "https://canada.ca"
+  },
+  {
+    "domain": "europa.eu",
+    "website_name": "European Union",
+    "category": "Government",
+    "official_url": "https://europa.eu"
+  },
+  {
+    "domain": "un.org",
+    "website_name": "United Nations",
+    "category": "Government",
+    "official_url": "https://un.org"
+  },
+  {
+    "domain": "who.int",
+    "website_name": "World Health Organization",
+    "category": "Government",
+    "official_url": "https://who.int"
+  },
+  {
+    "domain": "cdc.gov",
+    "website_name": "CDC",
+    "category": "Government",
+    "official_url": "https://cdc.gov"
+  },
+  {
+    "domain": "nasa.gov",
+    "website_name": "NASA",
+    "category": "Government",
+    "official_url": "https://nasa.gov"
+  },
+  {
+    "domain": "fbi.gov",
+    "website_name": "FBI",
+    "category": "Government",
+    "official_url": "https://fbi.gov"
+  },
+  {
+    "domain": "uidai.gov.in",
+    "website_name": "UIDAI (Aadhaar)",
+    "category": "Government",
+    "official_url": "https://uidai.gov.in"
+  },
+  {
+    "domain": "incometax.gov.in",
+    "website_name": "Income Tax Department India",
+    "category": "Government",
+    "official_url": "https://incometax.gov.in"
+  },
+  {
+    "domain": "mygov.in",
+    "website_name": "MyGov India",
+    "category": "Government",
+    "official_url": "https://mygov.in"
+  },
+  {
+    "domain": "irctc.co.in",
+    "website_name": "IRCTC",
+    "category": "Government",
+    "official_url": "https://irctc.co.in"
+  },
+  {
+    "domain": "facebook.com",
+    "website_name": "Facebook",
+    "category": "Social Media",
+    "official_url": "https://facebook.com"
+  },
+  {
+    "domain": "instagram.com",
+    "website_name": "Instagram",
+    "category": "Social Media",
+    "official_url": "https://instagram.com"
+  },
+  {
+    "domain": "x.com",
+    "website_name": "X (Twitter)",
+    "category": "Social Media",
+    "official_url": "https://x.com"
+  },
+  {
+    "domain": "linkedin.com",
+    "website_name": "LinkedIn",
+    "category": "Social Media",
+    "official_url": "https://linkedin.com"
+  },
+  {
+    "domain": "tiktok.com",
+    "website_name": "TikTok",
+    "category": "Social Media",
+    "official_url": "https://tiktok.com"
+  },
+  {
+    "domain": "snapchat.com",
+    "website_name": "Snapchat",
+    "category": "Social Media",
+    "official_url": "https://snapchat.com"
+  },
+  {
+    "domain": "pinterest.com",
+    "website_name": "Pinterest",
+    "category": "Social Media",
+    "official_url": "https://pinterest.com"
+  },
+  {
+    "domain": "reddit.com",
+    "website_name": "Reddit",
+    "category": "Social Media",
+    "official_url": "https://reddit.com"
+  },
+  {
+    "domain": "tumblr.com",
+    "website_name": "Tumblr",
+    "category": "Social Media",
+    "official_url": "https://tumblr.com"
+  },
+  {
+    "domain": "whatsapp.com",
+    "website_name": "WhatsApp",
+    "category": "Social Media",
+    "official_url": "https://whatsapp.com"
+  },
+  {
+    "domain": "telegram.org",
+    "website_name": "Telegram",
+    "category": "Social Media",
+    "official_url": "https://telegram.org"
+  },
+  {
+    "domain": "discord.com",
+    "website_name": "Discord",
+    "category": "Social Media",
+    "official_url": "https://discord.com"
+  },
+  {
+    "domain": "quora.com",
+    "website_name": "Quora",
+    "category": "Social Media",
+    "official_url": "https://quora.com"
+  },
+  {
+    "domain": "threads.net",
+    "website_name": "Threads",
+    "category": "Social Media",
+    "official_url": "https://threads.net"
+  },
+  {
+    "domain": "netflix.com",
+    "website_name": "Netflix",
+    "category": "Streaming/Entertainment",
+    "official_url": "https://netflix.com"
+  },
+  {
+    "domain": "youtube.com",
+    "website_name": "YouTube",
+    "category": "Streaming/Entertainment",
+    "official_url": "https://youtube.com"
+  },
+  {
+    "domain": "spotify.com",
+    "website_name": "Spotify",
+    "category": "Streaming/Entertainment",
+    "official_url": "https://spotify.com"
+  },
+  {
+    "domain": "hulu.com",
+    "website_name": "Hulu",
+    "category": "Streaming/Entertainment",
+    "official_url": "https://hulu.com"
+  },
+  {
+    "domain": "disneyplus.com",
+    "website_name": "Disney+",
+    "category": "Streaming/Entertainment",
+    "official_url": "https://disneyplus.com"
+  },
+  {
+    "domain": "primevideo.com",
+    "website_name": "Amazon Prime Video",
+    "category": "Streaming/Entertainment",
+    "official_url": "https://primevideo.com"
+  },
+  {
+    "domain": "hotstar.com",
+    "website_name": "Disney+ Hotstar",
+    "category": "Streaming/Entertainment",
+    "official_url": "https://hotstar.com"
+  },
+  {
+    "domain": "twitch.tv",
+    "website_name": "Twitch",
+    "category": "Streaming/Entertainment",
+    "official_url": "https://twitch.tv"
+  },
+  {
+    "domain": "soundcloud.com",
+    "website_name": "SoundCloud",
+    "category": "Streaming/Entertainment",
+    "official_url": "https://soundcloud.com"
+  },
+  {
+    "domain": "appletv.com",
+    "website_name": "Apple TV",
+    "category": "Streaming/Entertainment",
+    "official_url": "https://appletv.com"
+  },
+  {
+    "domain": "vimeo.com",
+    "website_name": "Vimeo",
+    "category": "Streaming/Entertainment",
+    "official_url": "https://vimeo.com"
+  },
+  {
+    "domain": "google.com",
+    "website_name": "Google",
+    "category": "Cloud/Tech",
+    "official_url": "https://google.com"
+  },
+  {
+    "domain": "microsoft.com",
+    "website_name": "Microsoft",
+    "category": "Cloud/Tech",
+    "official_url": "https://microsoft.com"
+  },
+  {
+    "domain": "apple.com",
+    "website_name": "Apple",
+    "category": "Cloud/Tech",
+    "official_url": "https://apple.com"
+  },
+  {
+    "domain": "aws.amazon.com",
+    "website_name": "Amazon Web Services",
+    "category": "Cloud/Tech",
+    "official_url": "https://aws.amazon.com"
+  },
+  {
+    "domain": "azure.microsoft.com",
+    "website_name": "Microsoft Azure",
+    "category": "Cloud/Tech",
+    "official_url": "https://azure.microsoft.com"
+  },
+  {
+    "domain": "ibm.com",
+    "website_name": "IBM",
+    "category": "Cloud/Tech",
+    "official_url": "https://ibm.com"
+  },
+  {
+    "domain": "oracle.com",
+    "website_name": "Oracle",
+    "category": "Cloud/Tech",
+    "official_url": "https://oracle.com"
+  },
+  {
+    "domain": "salesforce.com",
+    "website_name": "Salesforce",
+    "category": "Cloud/Tech",
+    "official_url": "https://salesforce.com"
+  },
+  {
+    "domain": "adobe.com",
+    "website_name": "Adobe",
+    "category": "Cloud/Tech",
+    "official_url": "https://adobe.com"
+  },
+  {
+    "domain": "dropbox.com",
+    "website_name": "Dropbox",
+    "category": "Cloud/Tech",
+    "official_url": "https://dropbox.com"
+  },
+  {
+    "domain": "box.com",
+    "website_name": "Box",
+    "category": "Cloud/Tech",
+    "official_url": "https://box.com"
+  },
+  {
+    "domain": "github.com",
+    "website_name": "GitHub",
+    "category": "Cloud/Tech",
+    "official_url": "https://github.com"
+  },
+  {
+    "domain": "gitlab.com",
+    "website_name": "GitLab",
+    "category": "Cloud/Tech",
+    "official_url": "https://gitlab.com"
+  },
+  {
+    "domain": "atlassian.com",
+    "website_name": "Atlassian",
+    "category": "Cloud/Tech",
+    "official_url": "https://atlassian.com"
+  },
+  {
+    "domain": "slack.com",
+    "website_name": "Slack",
+    "category": "Cloud/Tech",
+    "official_url": "https://slack.com"
+  },
+  {
+    "domain": "zoom.us",
+    "website_name": "Zoom",
+    "category": "Cloud/Tech",
+    "official_url": "https://zoom.us"
+  },
+  {
+    "domain": "cisco.com",
+    "website_name": "Cisco",
+    "category": "Cloud/Tech",
+    "official_url": "https://cisco.com"
+  },
+  {
+    "domain": "intel.com",
+    "website_name": "Intel",
+    "category": "Cloud/Tech",
+    "official_url": "https://intel.com"
+  },
+  {
+    "domain": "nvidia.com",
+    "website_name": "NVIDIA",
+    "category": "Cloud/Tech",
+    "official_url": "https://nvidia.com"
+  },
+  {
+    "domain": "openai.com",
+    "website_name": "OpenAI",
+    "category": "Cloud/Tech",
+    "official_url": "https://openai.com"
+  },
+  {
+    "domain": "anthropic.com",
+    "website_name": "Anthropic",
+    "category": "Cloud/Tech",
+    "official_url": "https://anthropic.com"
+  },
+  {
+    "domain": "bbc.com",
+    "website_name": "BBC",
+    "category": "News",
+    "official_url": "https://bbc.com"
+  },
+  {
+    "domain": "cnn.com",
+    "website_name": "CNN",
+    "category": "News",
+    "official_url": "https://cnn.com"
+  },
+  {
+    "domain": "nytimes.com",
+    "website_name": "The New York Times",
+    "category": "News",
+    "official_url": "https://nytimes.com"
+  },
+  {
+    "domain": "reuters.com",
+    "website_name": "Reuters",
+    "category": "News",
+    "official_url": "https://reuters.com"
+  },
+  {
+    "domain": "theguardian.com",
+    "website_name": "The Guardian",
+    "category": "News",
+    "official_url": "https://theguardian.com"
+  },
+  {
+    "domain": "forbes.com",
+    "website_name": "Forbes",
+    "category": "News",
+    "official_url": "https://forbes.com"
+  },
+  {
+    "domain": "bloomberg.com",
+    "website_name": "Bloomberg",
+    "category": "News",
+    "official_url": "https://bloomberg.com"
+  },
+  {
+    "domain": "wsj.com",
+    "website_name": "The Wall Street Journal",
+    "category": "News",
+    "official_url": "https://wsj.com"
+  },
+  {
+    "domain": "timesofindia.indiatimes.com",
+    "website_name": "The Times of India",
+    "category": "News",
+    "official_url": "https://timesofindia.indiatimes.com"
+  },
+  {
+    "domain": "ndtv.com",
+    "website_name": "NDTV",
+    "category": "News",
+    "official_url": "https://ndtv.com"
+  },
+  {
+    "domain": "aljazeera.com",
+    "website_name": "Al Jazeera",
+    "category": "News",
+    "official_url": "https://aljazeera.com"
+  },
+  {
+    "domain": "apnews.com",
+    "website_name": "Associated Press",
+    "category": "News",
+    "official_url": "https://apnews.com"
+  },
+  {
+    "domain": "booking.com",
+    "website_name": "Booking.com",
+    "category": "Travel",
+    "official_url": "https://booking.com"
+  },
+  {
+    "domain": "airbnb.com",
+    "website_name": "Airbnb",
+    "category": "Travel",
+    "official_url": "https://airbnb.com"
+  },
+  {
+    "domain": "expedia.com",
+    "website_name": "Expedia",
+    "category": "Travel",
+    "official_url": "https://expedia.com"
+  },
+  {
+    "domain": "tripadvisor.com",
+    "website_name": "TripAdvisor",
+    "category": "Travel",
+    "official_url": "https://tripadvisor.com"
+  },
+  {
+    "domain": "makemytrip.com",
+    "website_name": "MakeMyTrip",
+    "category": "Travel",
+    "official_url": "https://makemytrip.com"
+  },
+  {
+    "domain": "uber.com",
+    "website_name": "Uber",
+    "category": "Travel",
+    "official_url": "https://uber.com"
+  },
+  {
+    "domain": "delta.com",
+    "website_name": "Delta Air Lines",
+    "category": "Travel",
+    "official_url": "https://delta.com"
+  },
+  {
+    "domain": "emirates.com",
+    "website_name": "Emirates",
+    "category": "Travel",
+    "official_url": "https://emirates.com"
+  },
+  {
+    "domain": "olacabs.com",
+    "website_name": "Ola",
+    "category": "Travel",
+    "official_url": "https://olacabs.com"
+  },
+  {
+    "domain": "mayoclinic.org",
+    "website_name": "Mayo Clinic",
+    "category": "Health",
+    "official_url": "https://mayoclinic.org"
+  },
+  {
+    "domain": "webmd.com",
+    "website_name": "WebMD",
+    "category": "Health",
+    "official_url": "https://webmd.com"
+  },
+  {
+    "domain": "nih.gov",
+    "website_name": "National Institutes of Health",
+    "category": "Health",
+    "official_url": "https://nih.gov"
+  },
+  {
+    "domain": "practo.com",
+    "website_name": "Practo",
+    "category": "Health",
+    "official_url": "https://practo.com"
+  },
+  {
+    "domain": "healthline.com",
+    "website_name": "Healthline",
+    "category": "Health",
+    "official_url": "https://healthline.com"
+  },
+  {
+    "domain": "cvs.com",
+    "website_name": "CVS Health",
+    "category": "Health",
+    "official_url": "https://cvs.com"
+  },
+  {
+    "domain": "notion.so",
+    "website_name": "Notion",
+    "category": "Productivity",
+    "official_url": "https://notion.so"
+  },
+  {
+    "domain": "trello.com",
+    "website_name": "Trello",
+    "category": "Productivity",
+    "official_url": "https://trello.com"
+  },
+  {
+    "domain": "asana.com",
+    "website_name": "Asana",
+    "category": "Productivity",
+    "official_url": "https://asana.com"
+  },
+  {
+    "domain": "monday.com",
+    "website_name": "monday.com",
+    "category": "Productivity",
+    "official_url": "https://monday.com"
+  },
+  {
+    "domain": "evernote.com",
+    "website_name": "Evernote",
+    "category": "Productivity",
+    "official_url": "https://evernote.com"
+  },
+  {
+    "domain": "canva.com",
+    "website_name": "Canva",
+    "category": "Productivity",
+    "official_url": "https://canva.com"
+  },
+  {
+    "domain": "figma.com",
+    "website_name": "Figma",
+    "category": "Productivity",
+    "official_url": "https://figma.com"
+  },
+  {
+    "domain": "docusign.com",
+    "website_name": "DocuSign",
+    "category": "Productivity",
+    "official_url": "https://docusign.com"
+  },
+  {
+    "domain": "zendesk.com",
+    "website_name": "Zendesk",
+    "category": "Productivity",
+    "official_url": "https://zendesk.com"
+  },
+  {
+    "domain": "hubspot.com",
+    "website_name": "HubSpot",
+    "category": "Productivity",
+    "official_url": "https://hubspot.com"
+  },
+  {
+    "domain": "verizon.com",
+    "website_name": "Verizon",
+    "category": "Telecom",
+    "official_url": "https://verizon.com"
+  },
+  {
+    "domain": "att.com",
+    "website_name": "AT&T",
+    "category": "Telecom",
+    "official_url": "https://att.com"
+  },
+  {
+    "domain": "t-mobile.com",
+    "website_name": "T-Mobile",
+    "category": "Telecom",
+    "official_url": "https://t-mobile.com"
+  },
+  {
+    "domain": "airtel.in",
+    "website_name": "Airtel",
+    "category": "Telecom",
+    "official_url": "https://airtel.in"
+  },
+  {
+    "domain": "jio.com",
+    "website_name": "Jio",
+    "category": "Telecom",
+    "official_url": "https://jio.com"
+  },
+  {
+    "domain": "vodafone.com",
+    "website_name": "Vodafone",
+    "category": "Telecom",
+    "official_url": "https://vodafone.com"
+  },
+  {
+    "domain": "bt.com",
+    "website_name": "BT",
+    "category": "Telecom",
+    "official_url": "https://bt.com"
+  },
+  {
+    "domain": "orange.fr",
+    "website_name": "Orange",
+    "category": "Telecom",
+    "official_url": "https://orange.fr"
+  },
+  {
+    "domain": "steampowered.com",
+    "website_name": "Steam",
+    "category": "Gaming",
+    "official_url": "https://steampowered.com"
+  },
+  {
+    "domain": "epicgames.com",
+    "website_name": "Epic Games",
+    "category": "Gaming",
+    "official_url": "https://epicgames.com"
+  },
+  {
+    "domain": "ea.com",
+    "website_name": "Electronic Arts",
+    "category": "Gaming",
+    "official_url": "https://ea.com"
+  },
+  {
+    "domain": "ubisoft.com",
+    "website_name": "Ubisoft",
+    "category": "Gaming",
+    "official_url": "https://ubisoft.com"
+  },
+  {
+    "domain": "riotgames.com",
+    "website_name": "Riot Games",
+    "category": "Gaming",
+    "official_url": "https://riotgames.com"
+  },
+  {
+    "domain": "playstation.com",
+    "website_name": "PlayStation",
+    "category": "Gaming",
+    "official_url": "https://playstation.com"
+  },
+  {
+    "domain": "xbox.com",
+    "website_name": "Xbox",
+    "category": "Gaming",
+    "official_url": "https://xbox.com"
+  },
+  {
+    "domain": "nintendo.com",
+    "website_name": "Nintendo",
+    "category": "Gaming",
+    "official_url": "https://nintendo.com"
+  }
+]

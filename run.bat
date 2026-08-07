@@ -13,7 +13,9 @@ if not exist "venv" (
     call venv\Scripts\activate.bat
     python -m pip install --upgrade pip
     pip install -r backend\requirements.txt
-    pip install -r requirements-ai.txt
+    if exist "requirements-ai.txt" (
+        pip install -r requirements-ai.txt
+    )
 ) else (
     call venv\Scripts\activate.bat
 )
@@ -35,23 +37,34 @@ if not exist "extension\dist\manifest.json" (
     cd ..
 )
 
+:: 4. Seed baseline dataset if needed
+if exist "scripts\import_twin_dataset.py" (
+    echo [!] Checking Digital Twins dataset...
+    python scripts\import_twin_dataset.py
+)
+
 echo.
 echo ==========================================================
 echo   Starting CTIP Services...
 echo ----------------------------------------------------------
-echo   Backend API:     http://localhost:8000
-echo   API Docs:        http://localhost:8000/docs
-echo   Frontend App:    http://localhost:5173
-echo   Default Login:   admin@ycce.edu.in  /  password123
+echo   Backend API:             http://localhost:8000
+echo   API Docs:                http://localhost:8000/docs
+echo   Frontend App:            http://localhost:5173
+echo   Demo Phishing Site:      http://localhost:8088
+echo   Default Login:           admin@ycce.edu.in  /  password123
 echo ==========================================================
 echo.
 
-:: Start Backend in a separate window or background
-start "CTIP Backend (Port 8000)" cmd /k "cd /d %~dp0 && call venv\Scripts\activate.bat && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload"
+:: Start Backend in a separate window
+start "CTIP Backend (Port 8000)" cmd /k "cd /d %~dp0 && call venv\Scripts\activate.bat && set PYTHONPATH=%~dp0 && python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload"
 
 :: Start Frontend in a separate window
 start "CTIP Frontend (Port 5173)" cmd /k "cd /d %~dp0\frontend && npm run dev"
 
-echo [OK] Both Backend and Frontend have been launched in separate windows!
-echo Keep those windows open while using the platform.
+:: Start Demo Phishing Server in a separate window
+if exist "demo\phishing_site" (
+    start "CTIP Demo Phishing Site (Port 8088)" cmd /k "cd /d %~dp0\demo\phishing_site && python -m http.server 8088"
+)
+
+echo [OK] All CTIP servers have been launched!
 pause

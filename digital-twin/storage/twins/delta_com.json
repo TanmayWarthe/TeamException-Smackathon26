@@ -1,0 +1,19 @@
+{
+  "website_name": "Delta Air Lines",
+  "domain": "delta.com",
+  "official_url": "https://delta.com",
+  "category": "Travel",
+  "fingerprint_version": 1,
+  "screenshot_path": "",
+  "created_at": "2026-08-07T04:45:36.332637+00:00",
+  "updated_at": "2026-08-07T04:45:36.332645+00:00",
+  "dom_fingerprint": {
+    "total_elements": 0,
+    "forms": [],
+    "inputs": [],
+    "buttons": []
+  },
+  "css_colors": [],
+  "visual_embedding": null,
+  "logo_embedding": null
+}
